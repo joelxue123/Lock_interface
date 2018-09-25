@@ -1,0 +1,65 @@
+[DebugChecksum]
+Checksum=1584413218
+[DisAssemblyWindow]
+NumStates=_ 1
+State 1=_ 1
+[InstructionProfiling]
+Enabled=_ 0
+[CodeCoverage]
+Enabled=_ 0
+[StackPlugin]
+Enabled=1
+OverflowWarningsEnabled=1
+WarningThreshold=90
+SpWarningsEnabled=1
+WarnHow=0
+UseTrigger=1
+TriggerName=main
+LimitSize=0
+ByteLimit=50
+[CallStackLog]
+Enabled=0
+[DriverProfiling]
+Enabled=0
+Mode=1
+Graph=0
+Symbiont=0
+[InterruptLog]
+LogEnabled=0
+SumEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+ShowTimeSum=1
+SumSortOrder=0
+[Interrupts]
+Enabled=1
+[MemoryMap]
+Enabled=0
+Base=0
+UseAuto=0
+TypeViolation=1
+UnspecRange=1
+ActionState=1
+[TraceHelper]
+Enabled=0
+ShowSource=1
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[Breakpoints]
+Count=0
+[Aliases]
+A0=_ "F:\STM8L051F3P6\EasySTM8L051F3P6开发板光盘资料_161018_V1\2.配套源代码\祥瑞实体电子EasySTM8L051F3开发板_实验1_流水灯控制\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_clk.c" ""
+A1=_ "F:\STM8L051F3P6\EasySTM8L051F3P6开发板光盘资料_161018_V1\2.配套源代码\祥瑞实体电子EasySTM8L051F3开发板_实验1_流水灯控制\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_gpio.c" ""
+A2=_ "F:\STM8L051F3P6\EasySTM8L051F3P6开发板光盘资料_161018_V1\2.配套源代码\祥瑞实体电子EasySTM8L051F3开发板_实验1_流水灯控制\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_tim2.c" ""
+A3=_ "F:\STM8L051F3P6\EasySTM8L051F3P6开发板光盘资料_161018_V1\2.配套源代码\祥瑞实体电子EasySTM8L051F3开发板_实验1_流水灯控制\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_usart.c" ""
+A4=_ "F:\郑建雪工作目录\泉哥的工程\飞比6-30\飞比锁工程\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_clk.c" ""
+A5=_ "F:\郑建雪工作目录\泉哥的工程\飞比6-30\飞比锁工程\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_gpio.c" ""
+A6=_ "F:\郑建雪工作目录\泉哥的工程\飞比6-30\飞比锁工程\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_tim2.c" ""
+A7=_ "F:\郑建雪工作目录\泉哥的工程\飞比6-30\飞比锁工程\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_usart.c" ""
+Count=8
+SuppressDialog=0

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Project>
+  <Desktop>
+    <Static>
+      <Debug-Log>
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1861</ColumnWidth1></Debug-Log>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1395</ColumnWidth1><ColumnWidth2>372</ColumnWidth2><ColumnWidth3>93</ColumnWidth3></Build>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>207</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+      <Disassembly>
+        
+        
+        
+      <MixedMode>1</MixedMode><CodeCovShow>1</CodeCovShow><InstrProfShow>1</InstrProfShow></Disassembly>
+    <Watch><Format><struct_types/><watch_formats/></Format><Column0>100</Column0><Column1>100</Column1><Column2>100</Column2><Column3>100</Column3></Watch><Register/></Static>
+    <Windows>
+      
+      
+      
+    <Wnd0>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-28470-17984</Identity>
+            <TabName>Debug Log</TabName>
+            <Factory>Debug-Log</Factory>
+            <Session/>
+          </Tab>
+          <Tab>
+            <Identity>TabID-27947-17994</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd0><Wnd1>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-6451-17987</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>feibi</ExpandedNode><ExpandedNode>feibi/APP</ExpandedNode><ExpandedNode>feibi/feibi</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd1><Wnd2>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-17199-17990</Identity>
+            <TabName>Disassembly</TabName>
+            <Factory>Disassembly</Factory>
+            <Session/>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd2><Wnd6><Tabs><Tab><Identity>TabID-24618-29922</Identity><TabName>Watch</TabName><Factory>Watch</Factory><Session><Expressions><Expression><Expression>cmd</Expression></Expression><Expression><Expression>data_buff</Expression></Expression><Expression><Expression>G_receive_data</Expression></Expression><Expression><Expression>G_send_data</Expression></Expression><Expression><Expression>BaudRate_Mantissa</Expression></Expression><Expression><Expression>freq</Expression></Expression></Expressions><TabId>0</TabId><Column0>100</Column0><Column1>100</Column1><Column2>100</Column2><Column3>100</Column3></Session></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd6><Wnd7><Tabs><Tab><Identity>TabID-2164-30650</Identity><TabName>Register</TabName><Factory>Register</Factory><Session><REG1>0</REG1><REG2>0</REG2><Group>31</Group><States>0</States></Session></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd7></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\global.h</Filename><XPos>0</XPos><YPos>75</YPos><SelStart>1523</SelStart><SelEnd>1541</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\usart.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>195</SelStart><SelEnd>195</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\inc\stm8l15x.h</Filename><XPos>0</XPos><YPos>156</YPos><SelStart>6770</SelStart><SelEnd>6782</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\usart.c</Filename><XPos>0</XPos><YPos>27</YPos><SelStart>1731</SelStart><SelEnd>1731</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\command.c</Filename><XPos>0</XPos><YPos>1792</YPos><SelStart>43998</SelStart><SelEnd>43998</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_usart.c</Filename><XPos>0</XPos><YPos>202</YPos><SelStart>10476</SelStart><SelEnd>10476</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\app\protocol.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>217</SelStart><SelEnd>217</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_tim2.c</Filename><XPos>0</XPos><YPos>1475</YPos><SelStart>52103</SelStart><SelEnd>52103</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\app\bsp.c</Filename><XPos>0</XPos><YPos>147</YPos><SelStart>4900</SelStart><SelEnd>4900</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\app\bsp.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>63</SelStart><SelEnd>69</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\inc\stm8l15x_aes.h</Filename><XPos>0</XPos><YPos>34</YPos><SelStart>1743</SelStart><SelEnd>1743</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\STM8L15x-16x-05x-AL31-L_StdPeriph_Lib\src\stm8l15x_aes.c</Filename><XPos>0</XPos><YPos>157</YPos><SelStart>6052</SelStart><SelEnd>6052</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\eeprom.c</Filename><XPos>0</XPos><YPos>53</YPos><SelStart>1367</SelStart><SelEnd>1387</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\command.h</Filename><XPos>0</XPos><YPos>27</YPos><SelStart>1083</SelStart><SelEnd>1083</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\eeprom.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>313</SelStart><SelEnd>313</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\app\userdata.h</Filename><XPos>0</XPos><YPos>39</YPos><SelStart>2580</SelStart><SelEnd>2603</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\comm.c</Filename><XPos>0</XPos><YPos>63</YPos><SelStart>1627</SelStart><SelEnd>1697</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\app\protocol.c</Filename><XPos>0</XPos><YPos>147</YPos><SelStart>3345</SelStart><SelEnd>3345</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\stm8l15x_it.c</Filename><XPos>0</XPos><YPos>408</YPos><SelStart>10932</SelStart><SelEnd>10932</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\APP\main.c</Filename><XPos>0</XPos><YPos>398</YPos><SelStart>8362</SelStart><SelEnd>8362</SelEnd></Tab><ActiveTab>19</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\app\userdata.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>21</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-01201bd8><key>iaridepm.enu1</key></Toolbar-01201bd8></Sizes></Row0><Row1><Sizes><Toolbar-0a183f38><key>debuggergui.enu1</key></Toolbar-0a183f38></Sizes></Row1></Top><Left><Row0><Sizes><Wnd1><Rect><Top>-2</Top><Left>-2</Left><Bottom>731</Bottom><Right>281</Right><x>-2</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>104167</sizeHorzCX><sizeHorzCY>200401</sizeHorzCY><sizeVertCX>147396</sizeVertCX><sizeVertCY>734469</sizeVertCY></Rect></Wnd1></Sizes></Row0></Left><Right><Row0><Sizes><Wnd2><Rect><Top>-2</Top><Left>-2</Left><Bottom>731</Bottom><Right>38</Right><x>-2</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>104167</sizeHorzCX><sizeHorzCY>200401</sizeHorzCY><sizeVertCX>20833</sizeVertCX><sizeVertCY>734469</sizeVertCY></Rect></Wnd2></Sizes></Row0><Row1><Sizes><Wnd6><Rect><Top>-2</Top><Left>36</Left><Bottom>731</Bottom><Right>355</Right><x>36</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>104167</sizeHorzCX><sizeHorzCY>200401</sizeHorzCY><sizeVertCX>166146</sizeVertCX><sizeVertCY>734469</sizeVertCY></Rect></Wnd6></Sizes></Row1><Row2><Sizes><Wnd7><Rect><Top>-2</Top><Left>353</Left><Bottom>731</Bottom><Right>620</Right><x>353</x><y>-2</y><xscreen>267</xscreen><yscreen>244</yscreen><sizeHorzCX>139063</sizeHorzCX><sizeHorzCY>244489</sizeHorzCY><sizeVertCX>139063</sizeVertCX><sizeVertCY>734469</sizeVertCY></Rect></Wnd7></Sizes></Row2></Right><Bottom><Row0><Sizes><Wnd0><Rect><Top>-2</Top><Left>-2</Left><Bottom>198</Bottom><Right>1922</Right><x>-2</x><y>-2</y><xscreen>1924</xscreen><yscreen>200</yscreen><sizeHorzCX>1002083</sizeHorzCX><sizeHorzCY>200401</sizeHorzCY><sizeVertCX>104167</sizeVertCX><sizeVertCY>200401</sizeVertCY></Rect></Wnd0></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Project>
+
+
