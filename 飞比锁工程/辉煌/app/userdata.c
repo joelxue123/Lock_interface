@@ -103,6 +103,7 @@ void zigbeedata_2_lockdata(u8 zigbeedata_type,u8 *lockdata,u8 *zigbeedata)
 {
   u16 temp;
   u8 i,len;
+  u8 wap;
   switch(zigbeedata_type)
   {
     case zigbee_user_No:
@@ -121,23 +122,31 @@ void zigbeedata_2_lockdata(u8 zigbeedata_type,u8 *lockdata,u8 *zigbeedata)
        *lockdata = *lockdata | 0X00; //管理员属性
       break;
   case zigbee_password:
-        len = zigbeedata[0];
-      for(i = 0;i< 7;i++)
-          lockdata[i] &= 0x00;
+      len = zigbeedata[0];
+      for (i = 0;i < 7;i++)
+              lockdata[i] &= 0x00;
 
-      for(i = 0;i< len ;i++)
+      for (i = 0;i < 14 - len;i++)
       {
-        if(i%2 == 0)
-          lockdata[(len-i-1)/2] |= (zigbeedata[i+1]- '0')<<4;
-        else
-          lockdata[(len-i-1)/2] |= (zigbeedata[i+1]- '0');
+              if (( i) % 2 == 0)
+                      lockdata[(i) / 2] |= 0x0f << 4;
+              else
+                      lockdata[(i) / 2] |= 0x0f;
       }
-      for(i = len;i< 14 ;i++)
+
+      for (i = 0;i < len;i++)
       {
-        if(i%2 == 0)
-          lockdata[(i)/2] |= 0x0f<<4;
-        else
-          lockdata[(i)/2] |= 0x0f;
+              if ((14 - len - i) % 2 == 0)
+                      lockdata[(14 - len + i) / 2] |= (zigbeedata[i + 1] - '0') << 4;
+              else
+                      lockdata[(14 - len + i) / 2] |= (zigbeedata[i + 1] - '0');
+      }
+
+      for (i = 0;i < 4;i++)
+      {
+              wap = lockdata[i];
+              lockdata[i] = lockdata[6 - i];
+              lockdata[6 - i] = wap;
       }
     break;
   default:

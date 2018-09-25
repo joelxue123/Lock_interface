@@ -678,7 +678,12 @@ u8 lock_be_opened(void)
          if(t_1ms)
          {
            delay++;
+#if defined(Hui_huang)    
+           if(delay == 2000)
+#else 
            if(delay == 800)
+#endif             
+             
            {
               BFCT_protocol_Zigbee.receive_len =0;
               BFCT_protocol_Zigbee.receive_enable=1;
@@ -1098,17 +1103,14 @@ u8 add_user_process(void)
     data_buff[0] = 0x3f;
     data_buff[11] = 0xff;
     data_buff[33]=0x80;
-    zigbeedata_2_lockdata(zigbee_password,&data_buff[34],&BFCT_protocol_Zigbee.receive_data[8]);
-    for(i=37;i<41;i++)
-        data_buff[i]=0xff;
-    
+    zigbeedata_2_lockdata(zigbee_password,&data_buff[34],&BFCT_protocol_Zigbee.receive_data[7]);
+
     casual_work_No = 0x999;
     data_buff[1] = 0x99;
     data_buff[2] = 0x09;
     data_buff[31] = 0x01;
     data_buff[32] = 0x00;
     
-
 #endif      
       zigbee_moni_state++;
     break;

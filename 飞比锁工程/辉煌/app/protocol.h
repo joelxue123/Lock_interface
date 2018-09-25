@@ -132,6 +132,43 @@ enum {
 #define ACK_OPENLOCK_BYFORCE 0X9a
 #define ACK_LOCK_OPENNET 0X9c
 
+
+
+/******ZIGBEE模块功能 **********************/
+ #define ZIGBEE_CMD_ADD_USER_FUNC
+// #define ZIGBEE_CMD_DELETE_USER_FUNC
+// #define ZIGBEE_CMD_MODIFY_USER_FUNC
+// #define ZIGBEE_CMD_OPENNET_FAIL_FUNC
+// #define ZIGBEE_CMD_OPENNET_SUCEESS_FUNC
+#define ZIGBEE_CMD_OPENLOCK_FUNC
+// #define ZIGBEE_CMD_CLOCK_SYNC_FUNC
+// #define ZIGBEE_CMD_INQURE_USERINFO_FUNC
+// #define ZIGBEE_CMD_INQURE_LOCK_STATE_FUNC
+// #define ZIGBEE_CMD_ADMIN_IDENTIFICATION_FUNC
+// #define ZIGBEE_CMD_OPENNET_FAIL_2_FUNC
+// #define ZIGBEE_CMD_inqure_factory_id_FUNC
+// #define ZIGBEE_CMD_ONLINE_INFO_FUNC
+
+
+/******LOCK模块功能 **********************/
+
+#define LOCK_OPENNET_FUNC
+#define LOCK_CLOSENETFUNC
+#define LOCK_LOCK_BE_OPENED_FUNC
+#define LCOK_LOCK_BE_CLOSED_FUNC
+#define LOCK_OPENLOCK_BYFORCE_FUNC
+#define LOCK_LOGIN_SAFE_MODE_FUNC
+#define LOCK_LOGOUT_SAFE_MODE_FUNC
+#define LOCK_LOGOUT_SETTING_MODE_FUNC
+// #define LOCK_USER_ADDED_FUNC
+// #define LOCK_STATE_UPDATA_FUNC
+//  #define LOCK_delete_USER_FUNC
+#define LOCK_illgal_user_REPORT_FUNC
+// #define LOCK_FORMAT_FUNC
+#define LOCK_ALARM_FUNC
+
+
+/******全局变量对外接口 **********************/
 extern u8 Sleep_time;
 extern u8 Allowed_Sleep ;
 extern const u8 key[];

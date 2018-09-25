@@ -423,7 +423,7 @@ void delete_user_process(void)
 
 /*********主函数流程 *****************/             
 
-  void main()
+void main()
 {
   volatile  u16 i,j;
   static  u16 delay=0;
