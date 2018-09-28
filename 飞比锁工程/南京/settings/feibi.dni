@@ -1,3 +1,29 @@
+[DebugChecksum]
+Checksum=1610182080
+[DisAssemblyWindow]
+NumStates=_ 1
+State 1=_ 1
+[InstructionProfiling]
+Enabled=_ 0
+[CodeCoverage]
+Enabled=_ 0
+[StackPlugin]
+Enabled=1
+OverflowWarningsEnabled=1
+WarningThreshold=90
+SpWarningsEnabled=1
+WarnHow=0
+UseTrigger=1
+TriggerName=main
+LimitSize=0
+ByteLimit=50
+[CallStackLog]
+Enabled=0
+[DriverProfiling]
+Enabled=0
+Mode=1
+Graph=0
+Symbiont=0
 [InterruptLog]
 LogEnabled=0
 SumEnabled=0
@@ -17,25 +43,6 @@ ActionState=1
 [TraceHelper]
 Enabled=0
 ShowSource=1
-[DebugChecksum]
-Checksum=723519161
-[DisAssemblyWindow]
-NumStates=_ 1
-State 1=_ 1
-[InstructionProfiling]
-Enabled=_ 0
-[CodeCoverage]
-Enabled=_ 0
-[StackPlugin]
-Enabled=1
-OverflowWarningsEnabled=1
-WarningThreshold=90
-SpWarningsEnabled=1
-WarnHow=0
-UseTrigger=1
-TriggerName=main
-LimitSize=0
-ByteLimit=50
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""

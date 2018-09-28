@@ -91,43 +91,42 @@ void os_time(void)
 u8 lock_usart_send(void)
 {
    static u16 delay=0;
-
    
-    if(t_1ms){
-       delay++;
-       if(1==delay)
-       {
-          USART_Cmd(USART1 , DISABLE);
-          GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_Low_Fast); //TXD
-       }
-       
-       if(20 ==delay)
-       {
-          GPIOA->ODR |= (uint8_t)GPIO_Pin_2;//设置串口为高电平
-       } 
-       if(delay < 1000 && delay > 20)
-       {
-          if(  GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) )
-          {
-              UART1_RemapInit(9600);//波特率 设置成 9600
-              send_hex(BFCT_protocol_Lock.send_data,BFCT_protocol_Lock.send_len); // 发送数据
-              BFCT_protocol_Lock.receive_enable =1;
-              delay =0;
-              for(delay=0;delay<1000;delay++);
-              
-              USART1->CR2 &= (uint8_t)~(USART_CR2_TEN);
-              GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_High_Fast); //TXD
-              delay=0;  
-              return 1;
-          }
-       }
-       if(delay > 1000)
-       {
-          delay=0;
-          return 2;
-       }
-    }
-       return 0;
+  if(t_1ms){
+     delay++;
+     if(1==delay)
+     {
+        USART_Cmd(USART1 , DISABLE);
+        GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_Low_Fast); //TXD
+     }
+     
+     if(20 ==delay)
+     {
+        GPIOA->ODR |= (uint8_t)GPIO_Pin_2;//设置串口为高电平
+     } 
+     if(delay < 1000 && delay > 20)
+     {
+        if(  GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) )
+        {
+            UART1_RemapInit(9600);//波特率 设置成 9600
+            send_hex(BFCT_protocol_Lock.send_data,BFCT_protocol_Lock.send_len); // 发送数据
+            BFCT_protocol_Lock.receive_enable =1;
+            delay =0;
+            for(delay=0;delay<1000;delay++);
+            
+            USART1->CR2 &= (uint8_t)~(USART_CR2_TEN);
+            GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_High_Fast); //TXD
+            delay=0;  
+            return 1;
+        }
+     }
+     if(delay > 1000)
+     {
+        delay=0;
+        return 2;
+     }
+  }
+  return 0;
 }
 
 /**********
@@ -461,7 +460,7 @@ void main()
   while(1)
   {
 
-   led();  //点灯
+ //  led();  //点灯
    lock_uart_send_session();
    zigbee_uart_send_session();
    uart_receiving_timeout();
@@ -482,10 +481,13 @@ void main()
     }
     else if(ret ==2)
     {
-      sys_timer = deadline;
+      sys_timer =0;
+      deadline = 10000;
+      BFCT_protocol_Lock.receive_flag =1;
       transparently_flag =0;
       USART_process_flag =1;
       write_userdata2eeprom(transparently_flag_addr,&transparently_flag, 1);
+      
     }
   }
 #endif   
@@ -500,17 +502,9 @@ void main()
       zigbee_state =0;
       sys_timer=0;
       
-      zigbee_erro =0;
-      lock_erro =0;
-      
-      Zigbee_process_done =0;  //清除串口完成标志位
-      Lock_process_done =0;
       
       Zigbee_processing_flag =0;  //清除串口处理使能函数
       Lock_processing_flag =0;
-      
-      BFCT_protocol_Lock.receive_enable=0;  //清除串口接收标志位
-      BFCT_protocol_Lock.receive_len =0;
       
       lock_interrupt = 0;
       zigbee_interrupt = 0;
@@ -522,13 +516,11 @@ void main()
       init_pin_interrupt();//进入低功耗模式
 
       deadline = 1;
-      if(BFCT_protocol_Zigbee.receive_len || zigbee_interrupt){
+      if(BFCT_protocol_Zigbee.receive_len || zigbee_interrupt || lock_interrupt){
         config_lock_rx_pin(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 ，此引脚为本模块唤醒引脚
          deadline = 300;
       }
-      if(lock_interrupt)
-         deadline = 300;   
-      
+
    }
   if(lock_interrupt)
   {
@@ -537,7 +529,7 @@ void main()
         config_lock_rx_pin(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 ，此引脚为本模块唤醒引脚
         config_wake_up_out(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 
       }
-      if( delay > 0  && delay < 9)
+      if( delay > 0  && delay < 5)
       {
         if( get_lock_rx_pin())
         {  }
@@ -548,13 +540,14 @@ void main()
         }
         
       }
-      if(delay ==9) {
+      if(delay ==5) {
 
         delay =0;
         lock_interrupt =0;
+        config_wake_up_out(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 
         UART1_RemapInit(9600);//波特率 设置成 9600
      //   config_lock_tx_pin(GPIO_Mode_Out_PP_High_Fast); //TXD
-        GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_High_Fast); //TXD
+//        GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_High_Fast); //TXD
         BFCT_protocol_Lock.receive_enable=1;
         BFCT_protocol_Zigbee.receive_enable=0;
         BFCT_protocol_Lock.receive_len =0;

@@ -104,6 +104,7 @@ void lockdata_2_zigbeedata( u8 lockdata_type,u8 *lockdata,u8 *zigbeedata)
 void zigbeedata_2_lockdata(u8 zigbeedata_type,u8 *lockdata,u8 *zigbeedata)
 {
   u16 temp;
+  u8 i;
   switch(zigbeedata_type)
   {
     case zigbee_user_No:
@@ -122,9 +123,13 @@ void zigbeedata_2_lockdata(u8 zigbeedata_type,u8 *lockdata,u8 *zigbeedata)
        *lockdata = *lockdata & 0X7f; //管理员属性
       break;
   case zigbee_password:
-      lockdata[0] = (zigbeedata[4]<<4) +  zigbeedata[5];
-      lockdata[1] = (zigbeedata[2]<<4) +  zigbeedata[3];
-      lockdata[2] = (zigbeedata[0]<<4) +  zigbeedata[1];
+    for(i=0;i<3;i++)
+    {
+      lockdata[i] = (zigbeedata[4-(i<<1)]<<4) +  zigbeedata[5-(1<<i)];
+    }
+   //   lockdata[0] = (zigbeedata[4]<<4) +  zigbeedata[5];
+   //   lockdata[1] = (zigbeedata[2]<<4) +  zigbeedata[3];
+  //    lockdata[2] = (zigbeedata[0]<<4) +  zigbeedata[1];
     break;
   default:
     break;

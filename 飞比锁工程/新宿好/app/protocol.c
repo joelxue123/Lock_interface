@@ -47,7 +47,7 @@ u8  zigbee_protocal_component(u8 *buf,u16 len,u8 cmd,u8* data_buff)
   u8 i;
   u16 sum ;
   
-  if(len < 1)
+  if(len < 1 || len > 65)
   return 0;
   
   buf[0]=0xF5;      //
@@ -162,7 +162,7 @@ u8 transparently_process(void)
           BFCT_protocol_Zigbee.receive_enable =0;
           deadline = 10000;
           BFCT_protocol_Zigbee.receive_flag =0;
-          if( (BFCT_protocol_Zigbee.receive_data[0] == 0xf5) && (BFCT_protocol_Zigbee.receive_data[ZIGBEE_CMD_ADDR] == 0xa8))
+          if( (BFCT_protocol_Zigbee.receive_data[0] == 0xf5) && (BFCT_protocol_Zigbee.receive_data[ZIGBEE_CMD_ADDR] == 0xa8) )
           {
               return 2;  
           }
@@ -175,6 +175,10 @@ u8 transparently_process(void)
         }
         if(BFCT_protocol_Lock.receive_flag == 1)
         {
+            if(BFCT_protocol_Lock.receive_data[LOCK_CMD_ADDR] == LOCK_OPENNET || BFCT_protocol_Lock.receive_data[LOCK_CMD_ADDR] == LOCK_CLOSENET )
+            {
+              return 2;
+            }
              BFCT_protocol_Lock.receive_enable =0;
              USART1->CR2 &= (uint8_t)~(USART_CR2_TEN);
              GPIO_Init(GPIOA,GPIO_Pin_2, GPIO_Mode_Out_PP_Low_Fast); //PA2,tx,µÍµçÆ½Êä³ö

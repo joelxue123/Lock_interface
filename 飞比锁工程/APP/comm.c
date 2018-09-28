@@ -114,12 +114,12 @@ u8 exe_lock_cmd(u8 lock_cmd)
     {
       ret = lock_opennet();
     }
+#if    defined LOCK_CLOSENETFUNC
     else if(lock_cmd==LOCK_CLOSENET)
     {
-#if 1
       ret = lock_closenet();
-#endif
     }
+#endif    
     else if(lock_cmd==LOCK_LOCK_BE_OPENED)
     {
       ret =  lock_be_opened();

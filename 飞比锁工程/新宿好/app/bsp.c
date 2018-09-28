@@ -85,15 +85,14 @@ void TIM2_Init(u16 prescaler)
 *******************************************************************************/
 void IOInit()
 {
-  GPIO_DeInit(GPIOC);  /*  初始化LED1*/
-  GPIO_Init(GPIOC , GPIO_Pin_1 , GPIO_Mode_Out_PP_High_Fast);  //初始化LED1，设置PC_1为快速输出模式
-      GPIOB->DDR = 0xff;
+    GPIOB->DDR = 0xff;
     GPIOB->ODR = 0x00;
     GPIOD->DDR = 0xff;
     GPIOD->ODR = 0x00;
     
     GPIOC->DDR = 0xFf;
     GPIOC->ODR = 0x10;
+ 
   GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_High_Fast); //TX_REMAP
   GPIO_Init(GPIOA, GPIO_Pin_3, GPIO_Mode_In_PU_No_IT);      //RX_REMAP
   GPIO_Init(GPIOC, GPIO_Pin_5, GPIO_Mode_Out_PP_High_Fast); //TXD
@@ -129,7 +128,9 @@ void init_pin_interrupt(void)
     CLK_PeripheralClockConfig(CLK_Peripheral_USART1 , DISABLE); //使能USART1时钟
 #endif
     GPIO_Init(GPIOB,GPIO_Pin_0,GPIO_Mode_In_FL_IT); //PC4, 浮空输入,带中断 
-    GPIO_Init(GPIOC,GPIO_Pin_5, GPIO_Mode_Out_PP_Low_Fast); //PC5,tx,低电平输出
+    GPIO_Init(GPIOC,GPIO_Pin_6, GPIO_Mode_In_FL_No_IT); //PC5,tx,低电平输出
+//    GPIO_Init(GPIOC,GPIO_Pin_5, GPIO_Mode_Out_PP_Low_Fast); //PC5,tx,低电平输出
+    GPIO_Init(GPIOC,GPIO_Pin_5, GPIO_Mode_In_FL_No_IT); //PC5,tx,低电平输出
     GPIO_Init(GPIOC, GPIO_Pin_4, GPIO_Mode_Out_PP_High_Fast); //Wakeup_IN 
     
     GPIO_Init(GPIOA,GPIO_Pin_2, GPIO_Mode_Out_PP_Low_Fast); //PA2,tx,低电平输出

@@ -11,7 +11,7 @@ SET,为高电平
 RESET为低电平
 **返回值 
 ***********/
-inline void wake_up_in(u8 GPIO_BitVal)
+void wake_up_in(u8 GPIO_BitVal)
 {
    GPIO_WriteBit(GPIOC , GPIO_Pin_4 ,GPIO_BitVal);  //设置PB0为高电平，唤醒模块
 }
@@ -152,14 +152,13 @@ u8 zigbee_usart_send(void)
     if(t_1ms){
       delay++;
       if(delay ==1)
-          wake_up_in(SET);
-      if(delay ==20)   
           wake_up_in(RESET);
+      if(delay ==20)   
+          wake_up_in(SET);
       if(delay ==40)
       {
         enableInterrupts();    //似乎没啥用，忘记了为啥放到这里了
         UART1_Init(ZIGBEE_BAUD); //PC5,PC6为串口,与zigbee模块通讯
-        wake_up_in(SET);
         send_hex(BFCT_protocol_Zigbee.send_data,BFCT_protocol_Zigbee.send_len); // 发送数据
 
       } 

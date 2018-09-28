@@ -11,7 +11,7 @@
 **返回值  检验和 sum
 ***********/
 
-u8 sum_check(u8 *p,u16 len)
+u8 sum_check(const u8 *p,u16 len)
 {
   u16 i;
   u8 sum=0;
@@ -23,7 +23,7 @@ u8 sum_check(u8 *p,u16 len)
 }
 
 /*******检验码验证****/
-u8 check_code(u8 *buf)
+u8 check_code(const u8 *buf)
 {
   u16 data_len = 0;
   
@@ -42,16 +42,16 @@ u8 check_code(u8 *buf)
 **函数描述 ：组帧，zigbee协议
 **参数描述： buf:储存组好的帧，len:数据长度+命令子 cmd:协议命令 。data_buf :数据内容
 **********/
-u8  zigbee_protocal_component(u8 *buf,u16 len,u8 cmd,u8* data_buff)
+u8  zigbee_protocal_component(u8 *buf,u16 len,u8 cmd,const u8* data_buff)
 {
   u8 i;
   
-  if(len < 1)
+  if(len < 1 || len > 65)
   return 0;
   
   buf[0]=0xA1;      //帧头
-  buf[1]=cmd;      //有效长度
-  buf[2]=(len >>8) &0xff;      //命令字
+  buf[1]=cmd;      //命令字
+  buf[2]=(len >>8) &0xff;      //长度
   buf[3]=len & 0xff;      //命令字自增ID
   
   for(i=0;i<len-1;i++){
@@ -83,7 +83,6 @@ u8 send_zigbeecmd(u8 len,u8 zigbeecmd,u8 *data_buff )
 {
   static u8 zigbee_moni_state=0;
   static u16 delay=0;
-  u8 ret;
   
   switch(zigbee_moni_state)
   {
@@ -131,6 +130,7 @@ u8 send_zigbeecmd(u8 len,u8 zigbeecmd,u8 *data_buff )
      }
      break;
   default:
+    zigbee_moni_state =0;
     break;
   }
   return 0;

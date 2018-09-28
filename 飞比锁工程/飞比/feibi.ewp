@@ -463,11 +463,11 @@
         </option>
         <option>
           <name>OCOutputOverride</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>feibi.srec</state>
+          <state>feibi.s19</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -475,7 +475,7 @@
         </option>
         <option>
           <name>OOCObjCopyEnable</name>
-          <state>0</state>
+          <state>1</state>
         </option>
       </data>
     </settings>

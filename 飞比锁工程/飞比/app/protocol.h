@@ -15,8 +15,8 @@ enum{
 
 #define UART_CMD_ADDR 1
 #define DATA_ADDR 4
-
-
+/*******串口接收超长处理*************/
+#define UART_TIMEOUT  30
 /********* zigbee 模块协议 宏定义 **************/
 
 #define UART_CMD_ADDR 1
@@ -120,6 +120,39 @@ u8 zigbee_usart_send(void);
 
 
 
+/******ZIGBEE模块功能 **********************/
+// #define ZIGBEE_CMD_ADD_USER_FUNC
+// #define ZIGBEE_CMD_DELETE_USER_FUNC
+// #define ZIGBEE_CMD_MODIFY_USER_FUNC
+ #define ZIGBEE_CMD_OPENNET_FAIL_FUNC
+ #define ZIGBEE_CMD_OPENNET_SUCEESS_FUNC
+#define ZIGBEE_CMD_OPENLOCK_FUNC
+ #define ZIGBEE_CMD_CLOCK_SYNC_FUNC
+// #define ZIGBEE_CMD_INQURE_USERINFO_FUNC
+// #define ZIGBEE_CMD_INQURE_LOCK_STATE_FUNC
+// #define ZIGBEE_CMD_ADMIN_IDENTIFICATION_FUNC
+// #define ZIGBEE_CMD_OPENNET_FAIL_2_FUNC
+// #define ZIGBEE_CMD_inqure_factory_id_FUNC
+ #define ZIGBEE_CMD_ONLINE_INFO_FUNC
+
+
+/******LOCK模块功能 **********************/
+
+#define LOCK_OPENNET_FUNC
+#define LOCK_CLOSENETFUNC
+#define LOCK_LOCK_BE_OPENED_FUNC
+#define LCOK_LOCK_BE_CLOSED_FUNC
+#define LOCK_OPENLOCK_BYFORCE_FUNC
+#define LOCK_LOGIN_SAFE_MODE_FUNC
+#define LOCK_LOGOUT_SAFE_MODE_FUNC
+#define LOCK_LOGOUT_SETTING_MODE_FUNC
+// #define LOCK_USER_ADDED_FUNC
+// #define LOCK_STATE_UPDATA_FUNC
+//  #define LOCK_delete_USER_FUNC
+#define LOCK_illgal_user_REPORT_FUNC
+// #define LOCK_FORMAT_FUNC
+#define LOCK_ALARM_FUNC
+
 
 /******宏定义函数******/
 #define ACK_zigbee_openlock_composite_data(cmd,len)  { \
@@ -133,11 +166,12 @@ u8 zigbee_usart_send(void);
 #define ACK_zigbee_openlock_fail_composite_data(cmd,len)  { \
             for_cmd_id(cmd_id,REQUEST,data_buff); \
             cmd_id++; \
-            data_buff[5+0] = 0;data_buff[5+1] = 1;data_buff[5+2] = 0;data_buff[5+3] = 0;data_buff[5+4] = 0;data_buff[5+5] = 0; \
+            data_buff[5+0] = 1;data_buff[5+1] = 1;data_buff[5+2] = 0;data_buff[5+3] = 0;data_buff[5+4] = 0;data_buff[5+5] = 0; \
             data_buff[5+6] = 0;data_buff[5+7] = 0;data_buff[5+8] = 0;data_buff[5+9] = 0;data_buff[5+10] = 0; \
             len = 0x0a; \
             cmd = ACK_ZIGBEE_CMD_OPENLOCK; \
-}
+} \
+  
 #define ACK_zigbee_synctime_composite_data(cmd,len)  {\
     data_buff[0]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[14]));\
     data_buff[1]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[13]));\
