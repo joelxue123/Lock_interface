@@ -331,6 +331,7 @@ u8 send_zigbeecmd(u8 len,u8 zigbeecmd,u8 *data_buff )
          
       break;
     default:
+      zigbee_moni_state =0;
       break;
     }
     return 0;
@@ -344,12 +345,14 @@ u8 zigbee_usart_send(void)
     static u8 delay=0;
     if(t_1ms){
       delay++;
-      if(delay ==2)
+      if(delay ==1){
+         enableInterrupts();    //似乎没啥用，忘记了为啥放到这里了
+         UART1_Init(ZIGBEE_BAUD); //PC5,PC6为串口,与zigbee模块通讯
+      }
+      if(delay ==3)
           wake_up_in(RESET);
       if(delay ==40)
       {
-        enableInterrupts();    //似乎没啥用，忘记了为啥放到这里了
-        UART1_Init(ZIGBEE_BAUD); //PC5,PC6为串口,与zigbee模块通讯
         send_hex(BFCT_protocol_Zigbee.send_data,BFCT_protocol_Zigbee.send_len); // 发送数据
 
       } 

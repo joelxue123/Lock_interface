@@ -18,7 +18,7 @@ ActionState=1
 Enabled=0
 ShowSource=1
 [DebugChecksum]
-Checksum=1955296685
+Checksum=297784862
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -36,6 +36,8 @@ UseTrigger=1
 TriggerName=main
 LimitSize=0
 ByteLimit=50
+[Breakpoints]
+Count=0
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -43,8 +45,6 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
-[Breakpoints]
-Count=0
 [Aliases]
 Count=0
 SuppressDialog=0

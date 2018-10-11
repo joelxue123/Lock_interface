@@ -144,6 +144,7 @@ u8 send_lcokcmd(u8 len,u8 zigbeecmd,u8 *data_buff )
      }
   break;
   default:
+    lock_moni_state =0;
   break;
   }
   return 0;
@@ -309,6 +310,7 @@ u8 delete_user(void)
          data_buff[1] = 0X09;
          data_buff[2] = 0Xff;
          delay =0;
+         casual_work_No =0;
          try_erro_num = 0;
          lock_moni_state ++;
       }
@@ -372,6 +374,7 @@ u8 delete_user(void)
        }
     break;
   default:
+    lock_moni_state =0;
     break;
     
   }
@@ -465,6 +468,7 @@ u8  lock_alarm(void)
 #endif
       break;
     default:
+      lock_moni_state =0;
       break;
   }
   return ret;
@@ -519,6 +523,7 @@ u8 lock_logout_settting_mode(void)
           }
       break;
     default:
+      lock_moni_state =0;
     break; 
 
     }
@@ -655,7 +660,7 @@ u8 lock_be_opened(void)
         data_buff[4] = 0x00; 
         data_buff[5] = 0x00;      
         lockdata_2_zigbeedata(lock_keytype,&BFCT_protocol_Lock.receive_data[9],&cmd);
-         
+        casual_work_No =( (BFCT_protocol_Lock.receive_data[9]& 0x0f) << 8 )  + BFCT_protocol_Lock.receive_data[8];  //用户编号;  //用户编号
    
 #endif
         BFCT_protocol_Zigbee.receive_len =0;
@@ -744,6 +749,7 @@ u8 lock_be_opened(void)
       }
     break;  
     default:
+      lock_moni_state =0;
     break;
   }
   return 0;
@@ -777,6 +783,7 @@ u8 lolck_illage_user_report(void)
       }
     break;
   default:
+    lock_moni_state =0;
     break;
   }
   return ret;
@@ -804,6 +811,7 @@ u8 lock_delete_user(void)
       }
       break;
   default:
+    lock_moni_state =0;
     break;
   }
   return 0;
@@ -923,7 +931,7 @@ u8 zigbee_openlock(void)
 #elif  defined(Fei_Bi)
               ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Hui_huang)
-               wake_up_in(SET);
+        //       wake_up_in(SET);
 #endif            
              
               BFCT_protocol_Zigbee.receive_enable=1;
@@ -938,7 +946,7 @@ u8 zigbee_openlock(void)
 #elif  defined(Fei_Bi)
             ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Hui_huang)
-               wake_up_in(SET);
+       //        wake_up_in(SET);
 #endif            
             BFCT_protocol_Zigbee.receive_enable=1;
             BFCT_protocol_Lock.receive_enable=0;
@@ -952,7 +960,7 @@ u8 zigbee_openlock(void)
 #elif  defined(Fei_Bi)
             ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Hui_huang)
-               wake_up_in(SET);
+       //        wake_up_in(SET);
 #endif  
           zigbee_moni_state1=10;
        }
@@ -974,7 +982,7 @@ u8 zigbee_openlock(void)
 #elif  defined(Fei_Bi)
             ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Hui_huang)
-               wake_up_in(SET);
+       //        wake_up_in(SET);
 
 #endif   
             zigbee_moni_state1 = 10;    
@@ -1001,7 +1009,7 @@ u8 zigbee_openlock(void)
 #elif  defined(Fei_Bi)
             ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Hui_huang)
-               wake_up_in(SET);
+       //        wake_up_in(SET);
 #endif            
             BFCT_protocol_Zigbee.receive_enable=1;
             BFCT_protocol_Lock.receive_enable=0;
@@ -1015,7 +1023,7 @@ u8 zigbee_openlock(void)
 #elif  defined(Fei_Bi)
             ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Hui_huang)
-               wake_up_in(SET);
+      //         wake_up_in(SET);
 #endif  
           zigbee_moni_state1=10;
        }
@@ -1073,6 +1081,7 @@ u8 zigbee_online_info(void)
      if(ret ==1) zigbee_moni_state =0;
     break;
   default:
+    zigbee_moni_state =0;
     break; 
   }
 
@@ -1089,7 +1098,7 @@ u8 zigbee_opennet_fail()
 }
 
 /***修改用户，增加用户通用这个函数 *******/
-u8 add_user_process(void)
+static u8 add_user_process(void)
 {
   u8 ret,i,j;
   static u8 user_No,function,user_attribute;
@@ -1138,7 +1147,6 @@ u8 add_user_process(void)
     data_buff[11] = 0xff;
     data_buff[33]=0x80;
     zigbeedata_2_lockdata(zigbee_password,&data_buff[34],&BFCT_protocol_Zigbee.receive_data[7]);
-
     casual_work_No = 0x999;
     data_buff[1] = 0x99;
     data_buff[2] = 0x09;
@@ -1428,6 +1436,7 @@ u8 zigbee_opennet_sucess()
      if(ret ==1) zigbee_moni_state =0;
     break;
   default:
+    zigbee_moni_state =0;
     break; 
   }
 
@@ -1477,6 +1486,7 @@ u8 zigbee_clock_sync()
        }
     break;
   default:
+    zigbee_moni_state =0;
     break; 
   }
   return 0;

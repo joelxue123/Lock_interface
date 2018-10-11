@@ -18,7 +18,7 @@ ActionState=1
 Enabled=0
 ShowSource=1
 [DebugChecksum]
-Checksum=-932655087
+Checksum=1308899109
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -44,9 +44,10 @@ Category=_ 0
 LoggingEnabled=_ 0
 LogFile=_ ""
 [Breakpoints]
-Bp0=_ "STD_CODE" "{$PROJ_DIR$\..\APP\command.c}.1172.9@1" 0 0 0 0 "" 0 ""
-Bp1=_ "STD_CODE" "{C:\Users\Administrator\Desktop\锁工程9-22-14-00\飞比锁工程\新宿好}.167.3@1" 0 0 0 0 "" 0 ""
-Count=2
+Bp0=_ "STD_CODE" "{C:\Users\Administrator\Desktop\锁工程9-22-14-00\飞比锁工程\新宿好}.167.3@1" 0 0 0 0 "" 0 ""
+Bp1=_ "STD_CODE" "{$PROJ_DIR$}.541.15@1" 0 0 0 0 "" 0 ""
+Bp2=_ "STD_CODE" "{$PROJ_DIR$\..\APP\command.c}.225.7@1" 1 0 0 0 "" 0 ""
+Count=3
 [Aliases]
 Count=0
 SuppressDialog=0

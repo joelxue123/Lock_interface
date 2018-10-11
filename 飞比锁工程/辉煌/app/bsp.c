@@ -101,11 +101,11 @@ void TIM3_Init(u16 period)
 void IOInit()
 {
     GPIOA->DDR = 0xff;
-    GPIOA->ODR = 0x00;
+    GPIOA->ODR = 0x04;
     GPIOB->DDR = 0xff;
     GPIOB->ODR = 0x00;
     GPIOC->DDR = 0xff;
-    GPIOC->ODR = 0x00;
+    GPIOC->ODR = 0x10;
     GPIOD->DDR = 0xff;
     GPIOD->ODR = 0x00;
   GPIO_Init(GPIOA,GPIO_Pin_2, GPIO_Mode_Out_PP_High_Fast); //PA2,tx,低电平输出
@@ -166,8 +166,10 @@ void init_pin_interrupt(void)
     enableInterrupts();	
     if(Wfi_Mode)
        wfi();
-    else
+    else{
+      GPIO_Init(GPIOC,GPIO_Pin_6, GPIO_Mode_Out_PP_Low_Fast); //PC6,rx,低电平输出
        halt();  //进入睡眠
+    }
 
 }
 

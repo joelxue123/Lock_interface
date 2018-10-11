@@ -288,7 +288,7 @@ void USART_process(void)
       data3_tc =(UART_TIMEOUT+1);
       if( Lock_processing_flag ==0 )/****只允许一个协议进入主流程******/
       {
-        deadline = 10000;
+        deadline = 15000;
         Zigbee_processing_flag =1;  //进入zigbee流程  
       }
     }
@@ -300,7 +300,7 @@ void USART_process(void)
       data3_tc =(UART_TIMEOUT+1);
       if( Zigbee_processing_flag ==0)/****只允许一个协议进入主流程******/
       {
-        deadline = 10000;
+        deadline = 15000;
         Lock_processing_flag  = 1; //进行锁处理流程
       }
     }  
@@ -502,6 +502,8 @@ void main()
       zigbee_state =0;
       sys_timer=0;
       
+      Zigbee_process_done = 0;
+      Lock_process_done = 0;
       
       Zigbee_processing_flag =0;  //清除串口处理使能函数
       Lock_processing_flag =0;
@@ -520,6 +522,8 @@ void main()
         config_lock_rx_pin(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 ，此引脚为本模块唤醒引脚
          deadline = 300;
       }
+	        if(lock_interrupt)
+        deadline = 300;
 
    }
   if(lock_interrupt)
