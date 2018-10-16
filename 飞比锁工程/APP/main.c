@@ -173,13 +173,6 @@ u8 zigbee_convert2lock(void)
         {
             zigbee_state =10;
         }
-#if defined(DEADLINE)        
-        else if(ret == 2)
-          {
-            zigbee_state = 0;
-            return 2;
-          }
-#endif
     break;
 
   case 10:
@@ -230,13 +223,6 @@ u8 lock_convert2zigbee(void)
       {
         lock_state =10;
       }
-#if defined(DEADLINE)
-      else if(ret ==2)
-      {
-        lock_state =0;
-        return 2;
-      }
-#endif
      break;
       
     case 10:
@@ -558,7 +544,9 @@ void main()
    //     enableInterrupts();
       }
   }
-   
+#if defined(Hui_huang) 
+
+#else  
   else if(zigbee_interrupt)
   {   
       config_lock_rx_pin(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 ，此引脚为本模块唤醒引脚
@@ -570,7 +558,7 @@ void main()
       BFCT_protocol_Zigbee.receive_len =0;
   //    enableInterrupts();
   }
-
+#endif
     if(t_1ms)
       sys_timer ++;
     

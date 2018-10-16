@@ -16,9 +16,6 @@ u16 casual_work_No =0;
 
 u8 data_buff[66]={0};
 
-#if defined(RING_BELL)
-static u8 ring_num=0;
-#endif
  
 /**************************************************************************
 **函数名称：void crc_8n()     Name: void crc_8n()
@@ -404,9 +401,6 @@ u8 lock_format(void)
 /*****进入安全模式流程 *******/
 u8 lock_login_safemode()
 {
-#if defined(RING_BELL)
-      ring_num =0;
-#endif
   return 1;
 }
 //*******退出安全模式 ************
@@ -424,13 +418,6 @@ u8  lock_alarm(void)
   switch(lock_moni_state)
   {
     case 0:
-#if defined(RING_BELL)
-    ring_num++;
-    if(ring_num < 1)
-      return 1;
-    else
-      ring_num =0;
-#endif
 
 #if defined(Fei_Bi)
       for_cmd_id(cmd_id,REQUEST,data_buff);
@@ -454,18 +441,15 @@ u8  lock_alarm(void)
         ret = send_zigbeecmd(len,cmd,data_buff);
         if(ret == 1) {
           lock_moni_state =0;
-        }
 #if defined(Hui_huang)
-        else if(ret == 2)
-        {
           Wfi_Mode=1;
           Sleep_time = 40;
           TIM3_Cmd(ENABLE);   
-          lock_moni_state = 0;
           BFCT_protocol_Zigbee.receive_enable = 1;
           BFCT_protocol_Zigbee.receive_len =0;    
+#endif        
         }
-#endif
+
       break;
     default:
       lock_moni_state =0;
@@ -550,28 +534,40 @@ u8 lock_add_user()
 {
   static u8 lock_moni_state=0;
   u8 ret,ret1;
+  static u8 len,cmd;
   
   switch(lock_moni_state)
   {
   case 0:
-    
+#if defined(Nan_Jing)    
       lockdata_2_zigbeedata (lock_user_attribute,&(BFCT_protocol_Lock.receive_data[14]),&data_buff[0]); //用户属性 信息
       lockdata_2_zigbeedata (lock_user_No,&(BFCT_protocol_Lock.receive_data[4]),&data_buff[1]); //用户编号信息
       lockdata_2_zigbeedata(lock_password,&(BFCT_protocol_Lock.receive_data[37]),&data_buff[5]);   //密码长度  
+      len =0x03; cmd = ZIGBEE_CMD_ADDUSER_FROM_LOCK;
+#elif defined (Hui_huang)
+        data_buff[0] = 0x12;
+        data_buff[1] = 0x34; 
+        data_buff[2] = 0x56;
+        data_buff[3] = 0x78; 
+        data_buff[4] = BFCT_protocol_Lock.receive_data[5]; 
+        data_buff[5] = BFCT_protocol_Lock.receive_data[4];      
+        lockdata_2_zigbeedata(lock_keytype,&BFCT_protocol_Lock.receive_data[36],&cmd);
+        cmd = cmd +9;
+
+#endif      
       lock_moni_state++;
 
     break;
   case 1:
-      ret = send_zigbeecmd(0x03,ZIGBEE_CMD_ADDUSER_FROM_LOCK,data_buff);
+      ret = send_zigbeecmd(len,cmd,data_buff);
       if(ret)
       {
-         if(zigbee_erro){
-            lock_moni_state =0;
-            return 1;
-         }
-         else{
-           lock_moni_state ++; 
-         }
+#if defined(Hui_huang)    
+        lock_moni_state =0;
+        zigbee_delay_s(18);
+        return 1;
+#endif
+        lock_moni_state ++; 
       }
     break;
   case 2:
@@ -605,9 +601,7 @@ u8 lock_be_opened(void)
   switch(lock_moni_state)
   {
     case 0:
-#if defined(RING_BELL)
-      ring_num =0;
-#endif
+
         battery1_level = BFCT_protocol_Lock.receive_data[4];  
         battery2_level = BFCT_protocol_Lock.receive_data[5];    
          
@@ -657,8 +651,8 @@ u8 lock_be_opened(void)
         data_buff[1] = 0x34; 
         data_buff[2] = 0x56;
         data_buff[3] = 0x78; 
-        data_buff[4] = 0x00; 
-        data_buff[5] = 0x00;      
+        data_buff[4] = (BFCT_protocol_Lock.receive_data[9]& 0x0f) << 8 ; 
+        data_buff[5] = BFCT_protocol_Lock.receive_data[8];      
         lockdata_2_zigbeedata(lock_keytype,&BFCT_protocol_Lock.receive_data[9],&cmd);
         casual_work_No =( (BFCT_protocol_Lock.receive_data[9]& 0x0f) << 8 )  + BFCT_protocol_Lock.receive_data[8];  //用户编号;  //用户编号
    
@@ -740,9 +734,7 @@ u8 lock_be_opened(void)
          delay = 0;
          lock_moni_state=0; 
 #if defined(Hui_huang)
-         Wfi_Mode =1;
-         Zigbee_Send_timeout = 10;
-         TIM3_Cmd(ENABLE);  
+         zigbee_delay_s(18);
 #endif
          return 1;
 
@@ -772,6 +764,14 @@ u8 lolck_illage_user_report(void)
     len = 0x0a;
 #elif defined(Nan_Jing)
     len = 0x01;
+#elif defined(Hui_huang)    
+    data_buff[0] = 0x12;
+    data_buff[1] = 0x34; 
+    data_buff[2] = 0x56;
+    data_buff[3] = 0x78; 
+    data_buff[4] = 0x00; 
+    data_buff[5] = 0x00; 
+    cmd = illegal_user;
 #endif
     cmd = ACK_ZIGBEE_ILLAGEL_USER_REPORT;
     lock_moni_state++;
@@ -780,6 +780,9 @@ u8 lolck_illage_user_report(void)
       ret = send_zigbeecmd(len,cmd,data_buff);
       if(ret == 1) {
         lock_moni_state =0;
+#if defined(Hui_huang)
+        zigbee_delay_s(10);
+#endif   
       }
     break;
   default:
@@ -837,13 +840,6 @@ u8 zigbee_openlock(void)
         ACK_zigbee_openlock_composite_data(cmd,len);
 #endif
 #if  defined(Hui_huang)
-        data_buff[0] = 0x12;
-        data_buff[1] = 0x34; 
-        data_buff[2] = 0x56;
-        data_buff[3] = 0x78; 
-        data_buff[4] = 0x00; 
-        data_buff[5] = 0x00; 
-
         data_buff[0] = 0x80;
         zigbeedata_2_lockdata(zigbee_password,&data_buff[1],&BFCT_protocol_Zigbee.receive_data[7]);
         
@@ -1033,7 +1029,8 @@ u8 zigbee_openlock(void)
 #if defined(Hui_huang)
           zigbee_moni_state1 =0;
           return 1;
-#endif
+#else          
+
           ret = send_zigbeecmd(len,cmd,data_buff);
           if(ret == 1) {
             zigbee_moni_state1 =0;
@@ -1041,6 +1038,7 @@ u8 zigbee_openlock(void)
             len =0;
             return 1;
           }
+ #endif         
          break;  
          
        default:
@@ -1442,6 +1440,8 @@ u8 zigbee_opennet_sucess()
 
   return ret;
 }
+
+#if defined ZIGBEE_CMD_CLOCK_SYNC_FUNC 
 /*****zigbee 时间同步 *******/
 u8 zigbee_clock_sync()
 {
@@ -1491,6 +1491,8 @@ u8 zigbee_clock_sync()
   }
   return 0;
 }
+#endif
+#if defined ZIGBEE_CMD_INQURE_USERINFO_FUNC 
 /*****zigbee 查询用户信息 *******/
 u8 zigbee_inqure_userinfo(void)
 {
@@ -1735,7 +1737,9 @@ u8 zigbee_inqure_userinfo(void)
   }
   return 0;
 }
+#endif
 
+#if defined ZIGBEE_CMD_INQURE_LOCK_STATE_FUNC 
 /*****zigbee 查询锁状态 *******/
 u8 zigbee_inqure_lockstate()
 {
@@ -1806,7 +1810,9 @@ u8 zigbee_inqure_lockstate()
   }
   return 0;
 }
+#endif
 
+#if defined ZIGBEE_CMD_ADMIN_IDENTIFICATION_FUNC   
 u8 zigbee_amdin_identification(void)
 {
   u8 ret,i;
@@ -1894,7 +1900,7 @@ u8 zigbee_amdin_identification(void)
   }
   return 0;
 }
-
+#endif
 
 #if defined(Jun_He)
 /*********查询锁状态,主要获得锁协议的类型************/

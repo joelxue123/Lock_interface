@@ -18,7 +18,7 @@ ActionState=1
 Enabled=0
 ShowSource=1
 [DebugChecksum]
-Checksum=-89790775
+Checksum=1702724591
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -44,7 +44,7 @@ Category=_ 0
 LoggingEnabled=_ 0
 LogFile=_ ""
 [Breakpoints]
-Bp0=_ "STD_CODE" "{$PROJ_DIR$\..\APP\stm8l15x_it.c}.223.3@1" 1 0 0 0 "" 0 ""
+Bp0=_ "STD_CODE" "{$PROJ_DIR$\..\APP\stm8l15x_it.c}.223.3@1" 0 0 0 0 "" 0 ""
 Count=1
 [Aliases]
 A0=_ "E:\郑剑雪工作目录\锁对接工作\锁工程9-11-12-00\飞比锁工程\APP\command.c" ""

@@ -5,9 +5,7 @@
 #include "usart.h"
 #include "bsp.h"
 
-const u8 key[]={0x46,0x45,0x49,0x42,0x49,0x47};
-u8 password[6]={1,2,3,4,5,6};
-u8 npass[6];
+
 u8 remote_open_flag = 0;
  u32 cmd_id = 1;
 u8 Allowed_Sleep =1;
@@ -215,24 +213,7 @@ u8 check_zigbee_cmd(u8 zigbee_cmd)
   return 1;
 }
 
-/******等待命令返回*******/
-u8 wait_cmd_return(u8 cmd)
-{
-  u8 ret = 0;
-  
-  switch(cmd)
-  {
-   case check_module_if_online:
-     ret =1;
-     break;
-  default:
-    ret =0;
-     break;
-  }
-  
-  return ret;
-  
-}
+
 
 
 /*****发送zigbee命令， 返回1 表示发送完成，发送 0表示 发送 失败***
@@ -288,7 +269,7 @@ u8 send_zigbeecmd(u8 len,u8 zigbeecmd,u8 *data_buff )
           {
             delay = 0;
             zigbee_moni_state = 0;
-            return 2;
+            return 1;
           }
           BFCT_protocol_Zigbee.send_len =  zigbee_protocal_component(BFCT_protocol_Zigbee.send_data,len,zigbeecmd,data_buff);
 
@@ -305,11 +286,6 @@ u8 send_zigbeecmd(u8 len,u8 zigbeecmd,u8 *data_buff )
         zigbee_moni_state = 10;
         delay =0;
         sys_timer = 0;
-        if(wait_cmd_return(zigbeecmd)){
-            delay = 0;
-            zigbee_moni_state = 0;
-            return 2;
-        }
       }
      if(t_1ms)
      {
@@ -317,7 +293,6 @@ u8 send_zigbeecmd(u8 len,u8 zigbeecmd,u8 *data_buff )
        if(delay > 500){
          zigbee_moni_state=0;
          delay=0;
-         lock_erro =  lock_erro | TIMEOUT_BIT;
          return 1;
        }
      }
@@ -372,3 +347,14 @@ u8 zigbee_usart_send(void)
     }  
    return 0;
 }  
+
+/******
+**zigbee 模块延时关闭,
+***单位S
+****/
+void zigbee_delay_s(u8 second)
+{
+     Wfi_Mode =1;
+     Zigbee_Send_timeout = second;
+     TIM3_Cmd(ENABLE); 
+}
