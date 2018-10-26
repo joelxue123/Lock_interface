@@ -6,6 +6,7 @@
 #include "command.h"
 #include "bsp.h"
 #include "userdata.h"
+#include "stm8l15x_iwdg.h"
 
 u8 G_receive_data[USART_LEN]={0};
 u8 G_send_data[100]={0};
@@ -71,6 +72,31 @@ void led(void)
 #endif 
 }
 
+/*******************************************************************************
+**函数名称：void TIM2_Init()     Name: void TIM2_Init()
+**功能描述：初始化定时器2
+**入口参数：无
+**输出：无
+*******************************************************************************/
+void TIM2_Init(u16 prescaler)
+{
+
+  CLK->PCKENR1 |= (uint8_t)1 ;
+    /* Set the Autoreload value */
+  TIM2->ARRH = (uint8_t)(prescaler >> 8) ;
+  TIM2->ARRL = (uint8_t)(prescaler);
+
+  /* Set the Prescaler value */
+  TIM2->PSCR = (uint8_t)(TIM2_Prescaler_1);
+
+  /* Select the Counter Mode */
+  TIM2->CR1 &= (uint8_t)((uint8_t)(~TIM_CR1_CMS)) & ((uint8_t)(~TIM_CR1_DIR));
+  TIM2->CR1 |= (uint8_t)(TIM2_CounterMode_Up);
+
+  /* Generate an update event to reload the Prescaler value immediately */
+  TIM2->EGR = TIM2_EventSource_Update;
+//  TIM2_TimeBaseInit(TIM2_Prescaler_1 , TIM2_CounterMode_Up , prescaler);    //设置定时器2为1分频，向上计数，计数值为16000即为1毫秒的计数值
+}
 
 /**********
 **函数描述 ： 时间节拍器,1ms溢出判断
@@ -82,6 +108,18 @@ void os_time(void)
       t_1ms=1;
       TIM2_ClearFlag(TIM2_FLAG_Update);
     }else t_1ms=0;
+}
+
+
+/*****独立看门口初始化*******/
+void IWDG_Init()
+{
+    //窗口看门狗在计数值降到0x3F时产生复位，而且不能在大于窗口值时喂狗，否则复位  
+    WWDG->WR = 0x70; //看门狗窗口值，窗口值必须在0x3F以上，但必须小于计数值，否则无法喂狗  
+    WWDG->CR    = 0x7F; //看门狗计数值  
+    WWDG->CR |= 0x80; //使能窗口看门狗  
+      
+    //16Mhz 主频，计数值0x7F 最大延长时间为 (64 * (12288 / 16000000)) = 49ms 
 }
 
 /**********************
@@ -96,7 +134,10 @@ u8 lock_usart_send(void)
      delay++;
      if(1==delay)
      {
+       
         USART_Cmd(USART1 , DISABLE);
+        USART1->CR2 =0x00;
+        GPIO_Init(GPIOA, GPIO_Pin_3, GPIO_Mode_In_PU_No_IT);      //RXD
         GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_Low_Fast); //TXD
      }
      
@@ -108,11 +149,11 @@ u8 lock_usart_send(void)
      {
         if(  GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) )
         {
-            UART1_RemapInit(9600);//波特率 设置成 9600
+            UART1_Init(Re_map);//波特率 设置成 9600
             send_hex(BFCT_protocol_Lock.send_data,BFCT_protocol_Lock.send_len); // 发送数据
             BFCT_protocol_Lock.receive_enable =1;
             delay =0;
-            for(delay=0;delay<1000;delay++);
+            for(delay=0;delay<2000;delay++);
             
             USART1->CR2 &= (uint8_t)~(USART_CR2_TEN);
             GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_High_Fast); //TXD
@@ -152,7 +193,9 @@ u8 zigbee_convert2lock(void)
         BFCT_protocol_Zigbee.receive_enable =0; //关闭zigbee串口接受函数
         
         BFCT_protocol_Zigbee.command=BFCT_protocol_Zigbee.receive_data[ZIGBEE_CMD_ADDR]; //获取锁的命令
-
+#if  defined(Hai_xin)   
+         BFCT_protocol_Zigbee.command = convert_zigbee_cmd();
+#endif
         if( check_code(BFCT_protocol_Zigbee.receive_data) )
         { /**********数据校验错误 ************/
 #if defined(DEADLINE)
@@ -173,13 +216,6 @@ u8 zigbee_convert2lock(void)
         {
             zigbee_state =10;
         }
-#if defined(DEADLINE)        
-        else if(ret == 2)
-          {
-            zigbee_state = 0;
-            return 2;
-          }
-#endif
     break;
 
   case 10:
@@ -230,13 +266,6 @@ u8 lock_convert2zigbee(void)
       {
         lock_state =10;
       }
-#if defined(DEADLINE)
-      else if(ret ==2)
-      {
-        lock_state =0;
-        return 2;
-      }
-#endif
      break;
       
     case 10:
@@ -294,7 +323,7 @@ void USART_process(void)
     }
     else if(BFCT_protocol_Lock.receive_flag==1)
     {
-      USART1->CR2 &= (uint8_t)~(USART_CR2_TEN);
+  //    USART1->CR2 &= (uint8_t)~(USART_CR2_TEN);
       GPIO_Init(GPIOA,GPIO_Pin_2, GPIO_Mode_Out_PP_Low_Fast); //PA2,tx,低电平输出
       
       data3_tc =(UART_TIMEOUT+1);
@@ -427,9 +456,9 @@ void main()
   volatile  u16 i,j;
   static  u16 delay=0;
   u8 ret;
-
+  
    disableInterrupts();   //关闭系统总中断
-  CLK_SYSCLKDivConfig(CLK_SYSCLKDiv_1); //内部时钟为1分频 = 16Mhz 
+  CLK->CKDIVR = (uint8_t)(0x00);
   
   deadline =1;
 
@@ -444,9 +473,11 @@ void main()
   
   for(i=0;i<3000;i++)
     for(j=0;j<1000;j++);
-  
+
+  IWDG_Init();
+
 #if defined(Jun_He) 
-  read_userdata4eeprom(transparently_flag_addr,&transparently_flag, 1);
+  read_userdata4eeprom(lock_user_No_addr,&transparently_flag, 1);
 #endif  
   
   BFCT_protocol_Zigbee.receive_data = G_receive_data ;
@@ -457,9 +488,11 @@ void main()
   
   USART_process_flag =1;
   data3_tc =(UART_TIMEOUT+1);
+  
   while(1)
   {
-
+    if ((WWDG->CR & 0x7F) < WWDG->WR) //小于窗口值才能喂狗  
+        WWDG->CR |= 0x7F; //重新喂狗 
  //  led();  //点灯
    lock_uart_send_session();
    zigbee_uart_send_session();
@@ -497,33 +530,37 @@ void main()
    
    if((Zigbee_process_done | Lock_process_done) | (sys_timer >= deadline) )
    {
-      delay =0;
-      lock_state=0;
-      zigbee_state =0;
-      sys_timer=0;
-      
-      Zigbee_process_done = 0;
-      Lock_process_done = 0;
-      
-      Zigbee_processing_flag =0;  //清除串口处理使能函数
-      Lock_processing_flag =0;
-      
-      lock_interrupt = 0;
-      zigbee_interrupt = 0;
-     
-      data3_tc =(UART_TIMEOUT+1);
-      
-      USART_Cmd(USART1 , DISABLE);
-
-      init_pin_interrupt();//进入低功耗模式
-
-      deadline = 1;
-      if(BFCT_protocol_Zigbee.receive_len || zigbee_interrupt || lock_interrupt){
-        config_lock_rx_pin(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 ，此引脚为本模块唤醒引脚
-         deadline = 300;
-      }
-	        if(lock_interrupt)
-        deadline = 300;
+     if(Lock_processing_flag | Zigbee_processing_flag){}
+     else
+     {
+        delay =0;
+        lock_state=0;
+        zigbee_state =0;
+        sys_timer=0;
+        
+        Zigbee_process_done = 0;
+        Lock_process_done = 0;
+        
+    //    Zigbee_processing_flag =0;  //清除串口处理使能函数
+    //    Lock_processing_flag =0;
+        
+        lock_interrupt = 0;
+        zigbee_interrupt = 0;
+       
+        data3_tc =(UART_TIMEOUT+1);
+        
+        USART_Cmd(USART1 , DISABLE);
+  
+        init_pin_interrupt();//进入低功耗模式
+  
+        deadline = 1;
+        if(BFCT_protocol_Zigbee.receive_len || zigbee_interrupt || lock_interrupt){
+          config_lock_rx_pin(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 ，此引脚为本模块唤醒引脚
+           deadline = 300;
+        }
+        if(lock_interrupt)
+          deadline = 300;
+     }
 
    }
   if(lock_interrupt)
@@ -549,7 +586,7 @@ void main()
         delay =0;
         lock_interrupt =0;
         config_wake_up_out(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 
-        UART1_RemapInit(9600);//波特率 设置成 9600
+        UART1_Init(Re_map);//波特率 设置成 9600
      //   config_lock_tx_pin(GPIO_Mode_Out_PP_High_Fast); //TXD
 //        GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_High_Fast); //TXD
         BFCT_protocol_Lock.receive_enable=1;
@@ -558,19 +595,21 @@ void main()
    //     enableInterrupts();
       }
   }
-   
+#if defined(Hui_huang) 
+
+#else  
   else if(zigbee_interrupt)
   {   
       config_lock_rx_pin(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 ，此引脚为本模块唤醒引脚
       config_wake_up_out(GPIO_Mode_In_FL_No_IT); //配置唤醒引脚为 无中断的浮空输入 
       zigbee_interrupt = 0;
-      UART1_Init(ZIGBEE_BAUD);//波特率 设置成 19200
+      UART1_Init(!Re_map);//波特率 设置成 19200
       BFCT_protocol_Lock.receive_enable=0;
       BFCT_protocol_Zigbee.receive_enable =1;
       BFCT_protocol_Zigbee.receive_len =0;
   //    enableInterrupts();
   }
-
+#endif
     if(t_1ms)
       sys_timer ++;
     

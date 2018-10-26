@@ -14,7 +14,6 @@ RESET为低电平
 ***********/
 void wake_up_in(u8 GPIO_BitVal)
 {
-  
    GPIO_WriteBit(GPIOC , GPIO_Pin_4 ,(BitAction)GPIO_BitVal);  //设置PB0为高电平，唤醒模块
 }
 
@@ -112,16 +111,7 @@ void IOInit()
   GPIO_Init(GPIOC, GPIO_Pin_4, GPIO_Mode_Out_PP_High_Fast); //Wakeup_IN  
 }
 
-/*******************************************************************************
-**函数名称：LED2
-**功能描述：初始化所有LED灯IO口
-**入口参数：无
-**输出：无
-*******************************************************************************/
-void LED2(u8 GPIO_BitVal)
-{
-  GPIO_WriteBit(GPIOC , GPIO_Pin_1 ,(BitAction)GPIO_BitVal);  //设置PB0为高电平，唤醒模块
-}
+
 
 
 void init_pin_interrupt(void)
@@ -173,13 +163,4 @@ void init_pin_interrupt(void)
 
 }
 
-
-void delay_s(u8 time)
-{
-  volatile u16 i,j,k;
-  for(k=0;k<time;k++){
-    for(i =0;i<1000;i++)
-     for(j=0;j<1000;j++);
-  }
-}
 

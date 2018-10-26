@@ -5,6 +5,8 @@
 #define ON 1
 #define OFF 0
 
+#define Re_map ((u8)1)
+
 extern u16 sys_timer;
 extern u16 deadline ;
 extern u8 Wfi_Mode;

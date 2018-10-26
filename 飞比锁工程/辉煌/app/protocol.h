@@ -2,11 +2,6 @@
 #define __PROTOCOL_H
 #include "stm8l15x.h"
 
-enum{
-  REQUEST = 0x00, // 主动上报
-  ACK = 0x01      //应答
-};
-
 
 #define  protocal_header (0x7f)
 #define  protocal_tail (0x55)
@@ -87,7 +82,7 @@ enum {
 #define ZIGBEE_CMD_INQURE_LOCK_STATE 0x17
 #define ZIGBEE_CMD_ADDUSER_FROM_LOCK 0x33
 
-#define ACK_ZIGBEE_ILLAGEL_USER_REPORT 0x20
+#define ACK_ZIGBEE_ILLAGEL_USER_REPORT 0x1b
 #define ACK_ZIGBEE_CMD_INQURE_LOCK_STATE  0x3B
 #define ACK_ZIGBEE_CMD_LOW_POWER 0X30
 #define ACK_ZIGBEE_CMD_UPLOAD 0X3D
@@ -155,25 +150,23 @@ enum {
 #define LOCK_OPENNET_FUNC
 #define LOCK_CLOSENETFUNC
 #define LOCK_LOCK_BE_OPENED_FUNC
-#define LCOK_LOCK_BE_CLOSED_FUNC
+//#define LCOK_LOCK_BE_CLOSED_FUNC
 #define LOCK_OPENLOCK_BYFORCE_FUNC
-#define LOCK_LOGIN_SAFE_MODE_FUNC
+//#define LOCK_LOGIN_SAFE_MODE_FUNC
 #define LOCK_LOGOUT_SAFE_MODE_FUNC
-#define LOCK_LOGOUT_SETTING_MODE_FUNC
-// #define LOCK_USER_ADDED_FUNC
+//#define LOCK_LOGOUT_SETTING_MODE_FUNC
+ #define LOCK_USER_ADDED_FUNC
 // #define LOCK_STATE_UPDATA_FUNC
 //  #define LOCK_delete_USER_FUNC
 #define LOCK_illgal_user_REPORT_FUNC
-// #define LOCK_FORMAT_FUNC
+ #define LOCK_FORMAT_FUNC
 #define LOCK_ALARM_FUNC
 
 
 /******全局变量对外接口 **********************/
 extern u8 Sleep_time;
 extern u8 Allowed_Sleep ;
-extern const u8 key[];
-extern u8 password[6];
-extern u8 npass[6];
+
 extern u8 remote_open_flag;
 extern u32 cmd_id ;
 extern u8 Zigbee_Send_timeout;
@@ -187,42 +180,8 @@ u8  zigbee_protocal_component(u8 *buf,u16 len,u8 cmd,u8* data_buff);
 u8 check_code(u8 *buf);
 void for_cmd_id(u32 cmd_id,u8 cmd_type,u8 *buf);
 u8 zigbee_usart_send(void);
+void  zigbee_delay_s(u8 second);
 
 
 
-
-/******宏定义函数******/
-#define ACK_zigbee_openlock_composite_data(cmd,len)  { \
-        cmd = ZIGBEE_CMD_OPENLOCK; \
-        cmd_id = *((u32*)&BFCT_protocol_Zigbee.receive_data[3]); \
-        for_cmd_id(cmd_id,ACK,data_buff); \
-        cmd_id++; \
-        len =0x01; \
-}
-
-#define ACK_zigbee_openlock_fail_composite_data(cmd,len)  { \
-            for_cmd_id(cmd_id,REQUEST,data_buff); \
-            cmd_id++; \
-            data_buff[5+0] = 0;data_buff[5+1] = 1;data_buff[5+2] = 0;data_buff[5+3] = 0;data_buff[5+4] = 0;data_buff[5+5] = 0; \
-            data_buff[5+6] = 0;data_buff[5+7] = 0;data_buff[5+8] = 0;data_buff[5+9] = 0;data_buff[5+10] = 0; \
-            len = 0x0a; \
-            cmd = ACK_ZIGBEE_CMD_OPENLOCK; \
-}
-#define ACK_zigbee_synctime_composite_data(cmd,len)  { \
-    data_buff[0]= BFCT_protocol_Zigbee.receive_data[14]; \
-    data_buff[1]= BFCT_protocol_Zigbee.receive_data[13]; \
-    data_buff[2]= BFCT_protocol_Zigbee.receive_data[12]; \
-    data_buff[3]= BFCT_protocol_Zigbee.receive_data[11]; \
-    data_buff[4]= BFCT_protocol_Zigbee.receive_data[10]; \
-    data_buff[5]= BFCT_protocol_Zigbee.receive_data[9]; \
-    write_userdata2eeprom( zigbee_clock_addr,data_buff,6); \
-    zigbee_moni_state ++; \
-        cmd = 0x62; \
-        cmd_id = *((u32*)&BFCT_protocol_Zigbee.receive_data[3]); \
-        for_cmd_id(cmd_id,ACK,data_buff); \
-        cmd_id++; \
-        len =0x01; \
-}
-
-
-#endif 
+#endif

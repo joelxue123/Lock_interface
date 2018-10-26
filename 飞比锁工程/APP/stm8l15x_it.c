@@ -475,7 +475,7 @@ INTERRUPT_HANDLER(USART1_RX_TIM5_CC_IRQHandler,28)
 	else if(BFCT_protocol_Zigbee.receive_len > 3 )	
         { 
           data3_tc = 0; ////////此为全局变量，需要谨慎使用
-#if    defined( Nan_Jing) || defined(Hui_huang) ||  defined(Jun_He)
+#if    defined( Nan_Jing) || defined(Hui_huang) ||  defined(Jun_He) || defined(Hai_xin) 
           if(BFCT_protocol_Zigbee.receive_len ==  protocal_len )
           {
               data3_tc =UART_TIMEOUT+1;
@@ -554,11 +554,11 @@ INTERRUPT_HANDLER(USART1_RX_TIM5_CC_IRQHandler,28)
         }
 
           
-            BFCT_protocol_Lock.receive_data[BFCT_protocol_Lock.receive_len] = Res;
+        BFCT_protocol_Lock.receive_data[BFCT_protocol_Lock.receive_len] = Res;
 
-            BFCT_protocol_Lock.receive_len++;
-            if(BFCT_protocol_Lock.receive_len > (USART_LEN-1))
-              BFCT_protocol_Lock.receive_len = (USART_LEN-1);
+        BFCT_protocol_Lock.receive_len++;
+        if(BFCT_protocol_Lock.receive_len > (USART_LEN-1))
+          BFCT_protocol_Lock.receive_len = (USART_LEN-1);
 
     }
   }

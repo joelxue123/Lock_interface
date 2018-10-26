@@ -67,7 +67,7 @@ u8 exe_zigbee_cmd(u8 zigbee_cmd)
       ret = zigbee_inqure_lockstate();    
     }
 #endif    
-#if defined ZIGBEE_CMD_ADMIN_IDENTIFICATION_FUNC   
+#if defined ZIGBEE_CMD_ADMIN_IDENTIFICATION_FUNC    
     else if(zigbee_cmd==ZIGBEE_CMD_ADMIN_IDENTIFICATION)
     {
        ret = zigbee_amdin_identification();

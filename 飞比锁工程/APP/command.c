@@ -16,9 +16,7 @@ u16 casual_work_No =0;
 
 u8 data_buff[66]={0};
 
-#if defined(RING_BELL)
-static u8 ring_num=0;
-#endif
+static u32 osal_time;
  
 /**************************************************************************
 **函数名称：void crc_8n()     Name: void crc_8n()
@@ -163,6 +161,8 @@ u8  get_lock_message(void)
   {
     GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_Low_Fast); //TXD
     BFCT_protocol_Lock.receive_flag=0;
+    BFCT_protocol_Lock.receive_len =0;
+    BFCT_protocol_Lock.receive_enable =0;
     zigbee_delay = 0;
     ret =1;
   }
@@ -217,6 +217,13 @@ u8 lock_opennet()
         data_buff[5] = 0x00; 
         sys_timer =0;
         cmd = set_up_network_sucess;
+
+#elif defined (Hai_xin)
+        data_buff[0] = 0x24;data_buff[1] = 0xaa;data_buff[2] = 0xaa;data_buff[3] = 0xff;data_buff[4] = 0xff;
+        data_buff[5] = 0x20; data_buff[6] = 0xff;
+        data_buff[7] = 0xff;data_buff[8] = 0xff;data_buff[9] = 0xff;data_buff[10] = 0xff;
+        len = 0x0c;
+        cmd = 0x12;   
 #endif
     
     lock_moni_state++;
@@ -290,7 +297,96 @@ u8 lock_opennet()
 /*****锁被关闭 ******/
 u8 lock_be_closed(void)
 {
-  return 1;
+  static u8 lock_moni_state=0,len =0,cmd =0;
+  u8 ret;
+  static u8 battery1_level =0, battery2_level =0;   
+  static u16 delay=0;
+  
+  switch(lock_moni_state)
+  {
+    case 0:
+
+        battery1_level = BFCT_protocol_Lock.receive_data[4];  
+        battery2_level = BFCT_protocol_Lock.receive_data[5];    
+#if defined(Hai_xin)      
+        if( (battery1_level + battery2_level) < 30)
+        {
+          data_buff[0] = 0x32;data_buff[1] = 0xff;data_buff[2] = 0xff;data_buff[3] = 0xff;data_buff[4] = 0xff;
+          data_buff[5] = 0x20; data_buff[6] = 0x01;
+          data_buff[7] = 0x0a;data_buff[8] = 0x01;data_buff[9] = 0x00;
+
+          len = 0x0b;
+          cmd = 0x14;  
+          lock_moni_state++;
+        }
+        else
+        {
+          return 1;
+        }
+#else
+        return 1;
+#endif
+       break; 
+    case 1:
+      ret = send_zigbeecmd(len,cmd,data_buff);
+      if(ret)
+      {
+#if defined(Hai_xin) 
+        if( (battery1_level + battery2_level) < 30)
+        {
+          data_buff[0] = 0x32;data_buff[1] = 0xff;data_buff[2] = 0xff;data_buff[3] = 0xff;data_buff[4] = 0xff;
+          data_buff[5] = 0x20; data_buff[6] = 0x01;data_buff[7] = 0x09;
+          data_buff[8] = 0x02;data_buff[9] = 0x00;data_buff[10] = 0x03;
+          delay = 0;
+          len = 0x0c;
+          cmd = 0x14;  
+          lock_moni_state++;
+        }
+        else
+        {
+           lock_moni_state =0;
+          return 1;
+        }
+#endif
+      } 
+      break;
+      
+    case 2:
+         if(t_1ms)
+         {
+           delay++;
+#if defined(Hui_huang)    
+           if(delay == 2000)
+#else 
+           if(delay == 800)
+#endif             
+           {
+              BFCT_protocol_Zigbee.receive_len =0;
+              BFCT_protocol_Zigbee.receive_enable=1;
+              BFCT_protocol_Lock.receive_enable=0;
+              BFCT_protocol_Zigbee.receive_flag =0;
+              delay=0;
+              
+              lock_moni_state++;
+           }
+         }
+    break;
+    
+    case 3:
+      ret = send_zigbeecmd(len,cmd,data_buff);
+      if(ret)
+      {
+         lock_moni_state =0;
+         return 1;
+      } 
+    break;
+    
+     default:
+     lock_moni_state =0;
+     break;
+  } 
+  
+  return 0;
 }
 
 
@@ -299,16 +395,17 @@ u8 delete_user(void)
 {
   static u8 lock_moni_state=0;
   static u16 delay =0;
+  static u8 buff[10];
   u8 ret;
-  static u8 try_erro_num = 0;
+  static u8 try_erro_num = 0,send_erro_num =0;;
   switch(lock_moni_state)
   {
   case 0:
       if(casual_work_No == (u16)0x999)  
       {
-         data_buff[0] = 0X99;
-         data_buff[1] = 0X09;
-         data_buff[2] = 0Xff;
+         buff[0] = 0X99;
+         buff[1] = 0X09;
+         buff[2] = 0Xff;
          delay =0;
          casual_work_No =0;
          try_erro_num = 0;
@@ -318,9 +415,10 @@ u8 delete_user(void)
         return 1;
     break;
   case 1:
-    ret = send_lcokcmd(0x04,LOCK_DELETE_USER,data_buff );
+    ret = send_lcokcmd(0x04,LOCK_DELETE_USER,buff );
     if(ret ==1)
     {
+      send_erro_num=0;
       delay =0;
       BFCT_protocol_Lock.receive_flag =0;
       lock_moni_state++;
@@ -328,9 +426,18 @@ u8 delete_user(void)
     }
     else if(ret ==2)
     {
+      send_erro_num++;
+      if(send_erro_num  >120)
+      {
+        send_erro_num =0;
+        lock_moni_state =0;
+        return 2; //删除失败
+      }
     }
     break;
   case 2:
+    BFCT_protocol_Lock.receive_flag =0;
+    BFCT_protocol_Lock.receive_len =0;
     if(try_erro_num > 1)
     {
       try_erro_num = 0;
@@ -363,12 +470,14 @@ u8 delete_user(void)
               casual_work_No = 0x0000;
          //     write_userdata2eeprom( casual_work_addr,(u8 *)&casual_work_No,2);
             }
+            casual_work_No = 0x0000;
             lock_moni_state =0;
             return 1;
           }
        }
        else if(ret ==2)
        {
+            casual_work_No = 0x0000;
             lock_moni_state =0;
             return 1;
        }
@@ -388,7 +497,38 @@ u8 delete_user(void)
 u8 lock_closenet(void) 
 {
   u8 ret=0;
-  ret = send_zigbeecmd(0x01,ZIGBEE_CMD_CLOSENET,data_buff);
+  static u8 cmd=0,len=0;
+  static u8 lock_moni_state =0;
+  
+  switch(lock_moni_state)
+  {
+    case 0: 
+  #if defined (Hai_xin)
+          data_buff[0] = 0x25;data_buff[1] = 0xaa;data_buff[2] = 0xaa;data_buff[3] = 0xff;data_buff[4] = 0xff;
+          data_buff[5] = 0x20; data_buff[6] = 0xff;
+          data_buff[7] = 0xff;data_buff[8] = 0xff;data_buff[9] = 0xff;data_buff[10] = 0xff;
+          len = 0x0c;
+          cmd = 0x12;   
+          lock_moni_state ++;
+  #else
+          lock_moni_state++;
+          cmd =ZIGBEE_CMD_CLOSENET;
+          len =0x01;
+  #endif
+    break;
+   case 1:
+      ret = send_zigbeecmd(len,cmd,data_buff);
+      if(ret ==1)
+      {
+        lock_moni_state =0;
+      }
+    break;
+    
+  default:
+    lock_moni_state =0;
+    break;
+  }
+  
   return ret;
   
 }
@@ -404,9 +544,6 @@ u8 lock_format(void)
 /*****进入安全模式流程 *******/
 u8 lock_login_safemode()
 {
-#if defined(RING_BELL)
-      ring_num =0;
-#endif
   return 1;
 }
 //*******退出安全模式 ************
@@ -424,13 +561,6 @@ u8  lock_alarm(void)
   switch(lock_moni_state)
   {
     case 0:
-#if defined(RING_BELL)
-    ring_num++;
-    if(ring_num < 1)
-      return 1;
-    else
-      ring_num =0;
-#endif
 
 #if defined(Fei_Bi)
       for_cmd_id(cmd_id,REQUEST,data_buff);
@@ -454,18 +584,15 @@ u8  lock_alarm(void)
         ret = send_zigbeecmd(len,cmd,data_buff);
         if(ret == 1) {
           lock_moni_state =0;
-        }
 #if defined(Hui_huang)
-        else if(ret == 2)
-        {
           Wfi_Mode=1;
           Sleep_time = 40;
           TIM3_Cmd(ENABLE);   
-          lock_moni_state = 0;
           BFCT_protocol_Zigbee.receive_enable = 1;
           BFCT_protocol_Zigbee.receive_len =0;    
+#endif        
         }
-#endif
+
       break;
     default:
       lock_moni_state =0;
@@ -482,6 +609,7 @@ u8 lock_logout_settting_mode(void)
     static u8 lock_moni_state=0;
     static u16 delay=0;
     u8 ret;
+    static u8 len,cmd;
 
     switch(lock_moni_state)
     {
@@ -513,15 +641,34 @@ u8 lock_logout_settting_mode(void)
             GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_Low_Fast); //TXD
             data_buff[0]=0; data_buff[1]=0; data_buff[2]=0; data_buff[3]=0; data_buff[4]=0; data_buff[5]=0; data_buff[6]=0; 
             write_userdata2eeprom(zigbee_clock_addr, data_buff, 6);
-            delay =0;
+            delay =0;   
+#if defined(Hai_xin) 
+            data_buff[0] = 0x51;
+            data_buff[5] = 0x20;
+            *(u32*)(&data_buff[6])  = osal_time;
+            len = 0x0b;
+            cmd = 0x14;
+            lock_moni_state++;
+#else            
             lock_moni_state = 0;
-            return 1;
+            return 1; 
+#endif            
           }
           else if(ret ==2)
           {
             goto clear;
           }
-      break;
+      break;   
+#if defined(Hai_xin) 
+    case 3:
+       ret = send_zigbeecmd(len,cmd,data_buff);
+       if(ret)
+       {
+         lock_moni_state =0;
+         return 1;
+       }
+   break;
+#endif      
     default:
       lock_moni_state =0;
     break; 
@@ -550,28 +697,40 @@ u8 lock_add_user()
 {
   static u8 lock_moni_state=0;
   u8 ret,ret1;
+  static u8 len,cmd;
   
   switch(lock_moni_state)
   {
   case 0:
-    
+#if defined(Nan_Jing)    
       lockdata_2_zigbeedata (lock_user_attribute,&(BFCT_protocol_Lock.receive_data[14]),&data_buff[0]); //用户属性 信息
       lockdata_2_zigbeedata (lock_user_No,&(BFCT_protocol_Lock.receive_data[4]),&data_buff[1]); //用户编号信息
       lockdata_2_zigbeedata(lock_password,&(BFCT_protocol_Lock.receive_data[37]),&data_buff[5]);   //密码长度  
+      len =0x03; cmd = ZIGBEE_CMD_ADDUSER_FROM_LOCK;
+#elif defined (Hui_huang)
+        data_buff[0] = 0x12;
+        data_buff[1] = 0x34; 
+        data_buff[2] = 0x56;
+        data_buff[3] = 0x78; 
+        data_buff[4] = BFCT_protocol_Lock.receive_data[5]; 
+        data_buff[5] = BFCT_protocol_Lock.receive_data[4];      
+        lockdata_2_zigbeedata(lock_keytype,&BFCT_protocol_Lock.receive_data[36],&cmd);
+        cmd = cmd +9;
+
+#endif      
       lock_moni_state++;
 
     break;
   case 1:
-      ret = send_zigbeecmd(0x03,ZIGBEE_CMD_ADDUSER_FROM_LOCK,data_buff);
+      ret = send_zigbeecmd(len,cmd,data_buff);
       if(ret)
       {
-         if(zigbee_erro){
-            lock_moni_state =0;
-            return 1;
-         }
-         else{
-           lock_moni_state ++; 
-         }
+#if defined(Hui_huang)    
+        lock_moni_state =0;
+        zigbee_delay_s(18);
+        return 1;
+#endif
+        lock_moni_state ++; 
       }
     break;
   case 2:
@@ -605,9 +764,7 @@ u8 lock_be_opened(void)
   switch(lock_moni_state)
   {
     case 0:
-#if defined(RING_BELL)
-      ring_num =0;
-#endif
+
         battery1_level = BFCT_protocol_Lock.receive_data[4];  
         battery2_level = BFCT_protocol_Lock.receive_data[5];    
          
@@ -616,7 +773,7 @@ u8 lock_be_opened(void)
 #if defined(Fei_Bi)
         for_cmd_id(cmd_id,REQUEST,data_buff);
         cmd_id++;
-        if(remote_open_flag == 1){
+        if(user_No == 0xff){
             data_buff[5+0] = 0 ; data_buff[5+1] = BFCT_protocol_Lock.receive_data[8];  //用户编号
             data_buff[5+2] = BFCT_protocol_Lock.receive_data[9]& 0x0f;data_buff[5+3] = 0;data_buff[5+4] = 0x05;data_buff[5+5] = 0;
             data_buff[5+6] = 0;data_buff[5+7] = 0;data_buff[5+8] = 0;data_buff[5+9] = 0;data_buff[5+10] = 0;
@@ -628,20 +785,22 @@ u8 lock_be_opened(void)
             data_buff[5+0] = BFCT_protocol_Lock.receive_data[8] ; data_buff[5+1] = BFCT_protocol_Lock.receive_data[9]& 0x0f;  //用户编号
             data_buff[5+3] = 0x04;
             lockdata_2_zigbeedata(lock_keytype,&BFCT_protocol_Lock.receive_data[9],&data_buff[5+2]);
-            if(battery1_level + battery2_level < 140)
-              data_buff[5+3] = 0x02;
-            else if(battery1_level + battery2_level < 100)
-              data_buff[5+3] = 0x03;
-            else if(battery1_level + battery2_level < 50)
-              data_buff[5+3] = 0x04;
+            if(battery1_level + battery2_level > 75)
+              data_buff[8] = 0x01;
+            else if(battery1_level + battery2_level > 50)
+              data_buff[8] = 0x02;
+            else if(battery1_level + battery2_level > 25)
+              data_buff[8] = 0x03;
+            else
+              data_buff[8] = 0x04;
             
             data_buff[5+4] = 0x05;
-            data_buff[5+5] = BFCT_protocol_Lock.receive_data[19];
-            data_buff[5+6] = BFCT_protocol_Lock.receive_data[20];
-            data_buff[5+7] = BFCT_protocol_Lock.receive_data[21];
-            data_buff[5+8] = BFCT_protocol_Lock.receive_data[22];
-            data_buff[5+9] = BFCT_protocol_Lock.receive_data[19];
-            data_buff[5+10] = BFCT_protocol_Lock.receive_data[19];
+            data_buff[5+5] =0x00;//BFCT_protocol_Lock.receive_data[19];
+            data_buff[5+6] =0x00;//BFCT_protocol_Lock.receive_data[20];
+            data_buff[5+7] =0x00;// BFCT_protocol_Lock.receive_data[21];
+            data_buff[5+8] = 0x00;//BFCT_protocol_Lock.receive_data[22];
+            data_buff[5+9] =  0x00; //BFCT_protocol_Lock.receive_data[19];
+            data_buff[5+10] =0x00;// BFCT_protocol_Lock.receive_data[19];
             len = 0x0a;
             cmd = ACK_ZIGBEE_CMD_LOCAL_OPEN_LOCK;
         }
@@ -657,10 +816,21 @@ u8 lock_be_opened(void)
         data_buff[1] = 0x34; 
         data_buff[2] = 0x56;
         data_buff[3] = 0x78; 
-        data_buff[4] = 0x00; 
-        data_buff[5] = 0x00;      
+        data_buff[4] = (BFCT_protocol_Lock.receive_data[9]& 0x0f) << 8 ; 
+        data_buff[5] = BFCT_protocol_Lock.receive_data[8];      
         lockdata_2_zigbeedata(lock_keytype,&BFCT_protocol_Lock.receive_data[9],&cmd);
         casual_work_No =( (BFCT_protocol_Lock.receive_data[9]& 0x0f) << 8 )  + BFCT_protocol_Lock.receive_data[8];  //用户编号;  //用户编号
+        
+#elif defined(Hai_xin)      
+        data_buff[0] = 0x32;data_buff[1] = 0xff;data_buff[2] = 0xff;data_buff[3] = 0xff;data_buff[4] = 0xff;
+        data_buff[5] = 0x20; data_buff[6] = 0x02;
+        data_buff[7] = 0x0a;data_buff[8] = 0x01;data_buff[9] = 0x02;
+        data_buff[10] = 0x04;  data_buff[11] = 0x05;  data_buff[12] = ( (BFCT_protocol_Lock.receive_data[9]& 0x0f) );
+        data_buff[13] = BFCT_protocol_Lock.receive_data[8]; lockdata_2_zigbeedata(lock_keytype,&BFCT_protocol_Lock.receive_data[9],&data_buff[14]); 
+        data_buff[15] = 0x01;data_buff[16] = 0x03;
+        
+        len = 0x12;
+        cmd = 0x14;  
    
 #endif
         BFCT_protocol_Zigbee.receive_len =0;
@@ -674,16 +844,15 @@ u8 lock_be_opened(void)
       ret = send_zigbeecmd(len,cmd,data_buff);
       if(ret)
       {
-         if(zigbee_erro){
-            delay =0;
-            lock_moni_state =0;
-            return 1;
-         }
          lock_moni_state++; 
+#if defined(Hai_xin) 
+         lock_moni_state =0;
+         return 1;
+#endif
       }
     break;
   case 2:
-      if( (battery1_level +battery2_level)< 50 )
+      if( (battery1_level +battery2_level)< 25 )
       {
 #if defined(Fei_Bi)
         for_cmd_id(cmd_id,REQUEST,data_buff);
@@ -740,9 +909,7 @@ u8 lock_be_opened(void)
          delay = 0;
          lock_moni_state=0; 
 #if defined(Hui_huang)
-         Wfi_Mode =1;
-         Zigbee_Send_timeout = 10;
-         TIM3_Cmd(ENABLE);  
+         zigbee_delay_s(18);
 #endif
          return 1;
 
@@ -772,6 +939,14 @@ u8 lolck_illage_user_report(void)
     len = 0x0a;
 #elif defined(Nan_Jing)
     len = 0x01;
+#elif defined(Hui_huang)    
+    data_buff[0] = 0x12;
+    data_buff[1] = 0x34; 
+    data_buff[2] = 0x56;
+    data_buff[3] = 0x78; 
+    data_buff[4] = 0x00; 
+    data_buff[5] = 0x00; 
+    cmd = illegal_user;
 #endif
     cmd = ACK_ZIGBEE_ILLAGEL_USER_REPORT;
     lock_moni_state++;
@@ -780,6 +955,9 @@ u8 lolck_illage_user_report(void)
       ret = send_zigbeecmd(len,cmd,data_buff);
       if(ret == 1) {
         lock_moni_state =0;
+#if defined(Hui_huang)
+        zigbee_delay_s(10);
+#endif   
       }
     break;
   default:
@@ -835,15 +1013,14 @@ u8 zigbee_openlock(void)
         ACK_zigbee_openlock_composite_data(cmd,len)
 #elif defined(Nan_Jing)
         ACK_zigbee_openlock_composite_data(cmd,len);
+#elif defined(Hai_xin)
+      data_buff[0] = 0x52;
+      data_buff[5] = 0x20; data_buff[6] = 0x06;
+      data_buff[7] = 0x00;
+      len = 0x09;
+      cmd = 0x16;  
 #endif
 #if  defined(Hui_huang)
-        data_buff[0] = 0x12;
-        data_buff[1] = 0x34; 
-        data_buff[2] = 0x56;
-        data_buff[3] = 0x78; 
-        data_buff[4] = 0x00; 
-        data_buff[5] = 0x00; 
-
         data_buff[0] = 0x80;
         zigbeedata_2_lockdata(zigbee_password,&data_buff[1],&BFCT_protocol_Zigbee.receive_data[7]);
         
@@ -875,6 +1052,12 @@ u8 zigbee_openlock(void)
               for(i=4;i<8;i++)
                 data_buff[i] = 0xff;
               zigbee_moni_state1 ++;
+#elif defined(Hai_xin)
+              data_buff[0] = 0x80;
+              zigbeedata_2_lockdata(zigbee_password,&data_buff[1],&BFCT_protocol_Zigbee.receive_data[11]);
+              for(i=4;i<8;i++)
+                data_buff[i] = 0xff;
+              zigbee_moni_state1++; 
 #endif
 
            }
@@ -904,7 +1087,6 @@ u8 zigbee_openlock(void)
             ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Fei_Bi)
             ACK_zigbee_openlock_fail_composite_data(cmd,len);
-
 #endif   
             zigbee_moni_state1 = 10;    
           } 
@@ -932,6 +1114,12 @@ u8 zigbee_openlock(void)
               ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Hui_huang)
         //       wake_up_in(SET);
+#elif defined(Hai_xin)        
+            data_buff[0] = 0x55;
+            data_buff[5] = 0xFD; data_buff[6] = 0x00;data_buff[7] = 0x00; data_buff[8] = 0x10;
+            data_buff[9] = 0x01;data_buff[10] = 0x03;
+            len = 0x0C;
+            cmd = 0x14; 
 #endif            
              
               BFCT_protocol_Zigbee.receive_enable=1;
@@ -947,6 +1135,7 @@ u8 zigbee_openlock(void)
             ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Hui_huang)
        //        wake_up_in(SET);
+
 #endif            
             BFCT_protocol_Zigbee.receive_enable=1;
             BFCT_protocol_Lock.receive_enable=0;
@@ -961,6 +1150,12 @@ u8 zigbee_openlock(void)
             ACK_zigbee_openlock_fail_composite_data(cmd,len);
 #elif  defined(Hui_huang)
        //        wake_up_in(SET);
+#elif defined(Hai_xin)        
+      data_buff[0] = 0x55;
+      data_buff[5] = 0xFD; data_buff[6] = 0x00;data_buff[7] = 0x00; data_buff[8] = 0x10;
+      data_buff[9] = 0x01;data_buff[10] = 0x03;
+      len = 0x0C;
+      cmd = 0x14; 
 #endif  
           zigbee_moni_state1=10;
        }
@@ -1033,7 +1228,8 @@ u8 zigbee_openlock(void)
 #if defined(Hui_huang)
           zigbee_moni_state1 =0;
           return 1;
-#endif
+#else          
+
           ret = send_zigbeecmd(len,cmd,data_buff);
           if(ret == 1) {
             zigbee_moni_state1 =0;
@@ -1041,6 +1237,7 @@ u8 zigbee_openlock(void)
             len =0;
             return 1;
           }
+ #endif         
          break;  
          
        default:
@@ -1105,6 +1302,13 @@ static u8 add_user_process(void)
   static u8 User_No_exist =1;
   static u8 try_erro = 0;
   static u8 zigbee_moni_state = 0;
+  static u8 len,cmd;
+  static u8 time_arr[20];
+  
+#if defined(Hai_xin)   
+  UTCTimeStruct tm;
+  u32 time;
+#endif  
   switch(zigbee_moni_state)
   {
   case 0:
@@ -1142,17 +1346,67 @@ static u8 add_user_process(void)
       
       if( (function == 0x13) && (user_attribute != 0x03) )
         User_No_exist = 0;
+      
+      len = 0x01;
+      cmd = ZIGBEE_CMD_ACK;
 #elif defined(Hui_huang)
-    data_buff[0] = 0x3f;
-    data_buff[11] = 0xff;
-    data_buff[33]=0x80;
-    zigbeedata_2_lockdata(zigbee_password,&data_buff[34],&BFCT_protocol_Zigbee.receive_data[7]);
-    casual_work_No = 0x999;
-    data_buff[1] = 0x99;
-    data_buff[2] = 0x09;
-    data_buff[31] = 0x01;
-    data_buff[32] = 0x00;
-    
+      data_buff[0] = 0x3f;
+      data_buff[11] = 0xff;
+      data_buff[33]=0x80;
+      zigbeedata_2_lockdata(zigbee_password,&data_buff[34],&BFCT_protocol_Zigbee.receive_data[7]);
+      casual_work_No = 0x999;
+      data_buff[1] = 0x99;
+      data_buff[2] = 0x09;
+      data_buff[31] = 0x01;
+      data_buff[32] = 0x00;
+      len = 0x01;
+      cmd = ZIGBEE_CMD_ACK;
+#elif defined(Hai_xin)     
+      
+      write_userdata2eeprom(casual_work_addr,&BFCT_protocol_Zigbee.receive_data[14], 19);
+      data_buff[0] = 0x52;
+      data_buff[5] = 0x20; data_buff[6] = 0x06;
+      data_buff[7] = 0x00;
+      
+      for(i=14;i<33;i++)
+         time_arr[i-14] = BFCT_protocol_Zigbee.receive_data[i];
+         
+      tm.year = u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[15]) + 2000;
+      tm.month = u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[16])-1;
+      tm.day =  u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[17])-1;
+      tm.hour = u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[18]);
+      tm.minutes =  u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[19]);
+      time = osal_convertUTC(&tm)-10;
+      data_buff[12]=(u8)(time & 0xff);data_buff[13]=(u8)((time>>8) & 0xff);data_buff[14]=(u8)((time>>16) & 0xff);
+      
+      tm.year = u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[21]) + 2000;
+      tm.month = u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[22])-1;
+      tm.day =  u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[23])-1;
+      tm.hour =  u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[24]);
+      tm.minutes =  u8_BCD_2_hex(BFCT_protocol_Zigbee.receive_data[25]);
+      
+      time = osal_convertUTC(&tm);
+      
+      data_buff[11] = 0xff;
+      
+
+      data_buff[15]=(u8)(time & 0xff);data_buff[16]=(u8)((time>>8) & 0xff);data_buff[17]=(u8)((time>>16) & 0xff);   
+      
+      data_buff[33]=0x80;
+      zigbeedata_2_lockdata(zigbee_password,&data_buff[34],&BFCT_protocol_Zigbee.receive_data[27]);
+      for(i=37;i<41;i++)
+         data_buff[i]=0xff;
+      
+
+      data_buff[31] = 0xff;
+      data_buff[32] = 0xff;
+      
+      
+      
+      
+      len = 0x09;
+      cmd = 0x16;  
+
 #endif      
       zigbee_moni_state++;
     break;
@@ -1161,18 +1415,45 @@ static u8 add_user_process(void)
 #if  defined(NO_reply)  
       ret =1;
 #else 
-       ret = send_zigbeecmd(0X01,ZIGBEE_CMD_ACK,data_buff);
+       ret = send_zigbeecmd(len,cmd,data_buff);
 #endif
        if(ret)
        {
           zigbee_delay = 0;
-          if(User_No_exist ==1) 
-             zigbee_moni_state = 4;
-          else
+          if(User_No_exist ==1)
+          {
+             zigbee_moni_state = 5;
+#if defined(Hai_xin)   
+            data_buff[0] = 0x3f;
+            data_buff[1] = 0x99;
+            data_buff[2] = 0x09;
+            casual_work_No = 0x999;
             zigbee_moni_state = 2;
+#endif        
+          }
+          else
+            zigbee_moni_state = 3;
       }
     break;
-  case 2:
+#if defined(Hai_xin)   
+   case 2:
+       ret = delete_user();
+       if(ret ==1)
+       {
+        zigbee_moni_state = 5;
+       }   
+       else if(ret ==2)
+       {
+          data_buff[0] = 0x55;
+          data_buff[5] = 0xFD; data_buff[6] = 0x00; data_buff[7] = 0x00; data_buff[8] = 0x00;
+          data_buff[9] = 0x02; data_buff[10] = 0x02; data_buff[11] = 0x00; 
+          len = 0x0d;
+          cmd = 0x14;
+          zigbee_moni_state = 10;
+       }
+    break;
+#endif      
+  case 3:
        ret = send_lcokcmd(0x01,39,data_buff );
        if(ret == 1)
        {
@@ -1188,7 +1469,7 @@ static u8 add_user_process(void)
       break;
       
 
-  case 3:
+  case 4:
       ret = get_lock_message();
       if(ret ==1)
       {
@@ -1217,7 +1498,7 @@ static u8 add_user_process(void)
           goto clear;
       }
       break;
-   case 4:
+   case 5:
        ret = send_lcokcmd(0x2a,0x01,data_buff );
        if(ret == 1)
        {
@@ -1238,7 +1519,7 @@ static u8 add_user_process(void)
           }
        }
   break;
-  case 5:
+  case 6:
     
       ret = get_lock_message();
       if(ret ==1)
@@ -1258,6 +1539,17 @@ static u8 add_user_process(void)
           {
             data_buff[0] = 0x03;data_buff[1] = user_attribute;data_buff[2] = user_No;data_buff[3] = 0x01;data_buff[4] = 0x06;
           }
+          len = 0x0c;
+          cmd = 0x50;
+#elif defined(Hai_xin)        
+          data_buff[0] = 0x55;
+          data_buff[5] = 0xFD; data_buff[6] = 0x00; data_buff[7] = 0x00; data_buff[8] = 0x00;
+          data_buff[9] = 0x16; data_buff[10] = 0x02; data_buff[11] = 0x00; data_buff[12] = 0x0B;
+          for(i=13;i<32;i++)
+             data_buff[i] = time_arr[i-13];
+
+          len = 0x21;
+          cmd = 0x14;
 #endif          
             zigbee_delay =0;
             zigbee_moni_state =10;
@@ -1276,7 +1568,7 @@ static u8 add_user_process(void)
 #if  defined(NO_reply)   
        ret =1;
 #else
-       ret = send_zigbeecmd(0X0c,0x50,data_buff);
+       ret = send_zigbeecmd(len,cmd,data_buff);
 #endif
        if(ret)
        {
@@ -1290,11 +1582,16 @@ static u8 add_user_process(void)
          return 1;
        }
     break;
+
+    
   default:
     zigbee_moni_state = 0;
     break; 
   }
   return 0;
+  
+  
+  
 clear :
     zigbee_delay = 0;
     zigbee_moni_state =0;
@@ -1306,12 +1603,9 @@ clear :
 u8 zigbee_adduser(void)
 {
   u8 ret;
-#if  defined( Nan_Jing) | defined(Hui_huang)
   ret = add_user_process();
   return ret;
-#else
-  return 1;
-#endif
+
 }
 /*****zigbee 删除用户 *******/
 u8 zigbee_delete_user(void)
@@ -1322,6 +1616,7 @@ u8 zigbee_delete_user(void)
   static u8 len,cmd;
   switch(zigbee_moni_state)
     {
+#if defined(Nan_Jing)
       case 0:
          ret = send_zigbeecmd(0x01,ZIGBEE_CMD_ACK,data_buff);
          if(ret)
@@ -1399,9 +1694,59 @@ u8 zigbee_delete_user(void)
           }
          break;  
          
-       default:
-         zigbee_moni_state =0;
-       break;
+
+       
+#elif defined(Hai_xin)
+    case 0:
+        data_buff[0] = 0x52;
+        data_buff[5] = 0x20; data_buff[6] = 0x06;
+        data_buff[7] = 0x00;
+        len = 0x09;
+        cmd = 0x16;
+        zigbee_moni_state++;
+    break;
+    case 1:
+     ret = send_zigbeecmd(len,cmd,data_buff);
+     if(ret ==1)
+     {
+       casual_work_No = 0x999;
+       zigbee_moni_state++;
+     }
+    break;
+    
+    case 2:
+      ret = delete_user();
+      if(ret)
+      {
+          data_buff[0] = 0x55;
+          data_buff[5] = 0xFD; data_buff[6] = 0x00;data_buff[7] = 0x00;data_buff[8] = 0x01;
+          data_buff[9] = 0x03; data_buff[10] = 0x00;data_buff[11] = 0x02;data_buff[12] = 0x00;
+          len = 0x0e;
+          cmd = 0x14;
+          zigbee_moni_state++;
+          if(ret == 1)
+          {
+              write_userdata2eeprom(casual_work_addr,&ret, 1);
+          
+          }
+          else if(ret ==2)
+          {
+             data_buff[12] = 0x01;
+          }
+      }
+    break;
+    case 3:
+     ret = send_zigbeecmd(len,cmd,data_buff);
+     if(ret ==1)
+     {
+       zigbee_moni_state =0;
+       return 1;
+     }
+      break;
+#endif      
+    default:
+       zigbee_moni_state =0;
+    break;
     }
   return 0;                                      
 }
@@ -1428,6 +1773,12 @@ u8 zigbee_opennet_sucess()
 #elif defined(Nan_Jing)
     cmd = ZIGBEE_CMD_ACK;
     len =1;
+#elif defined(Hai_xin)
+    data_buff[0] = 0x52;
+    data_buff[5] = 0x20; data_buff[6] = 0x06;
+    data_buff[7] = 0x00;
+    len = 0x09;
+    cmd = 0x16;   
 #endif
     zigbee_moni_state ++;
     break;
@@ -1442,55 +1793,7 @@ u8 zigbee_opennet_sucess()
 
   return ret;
 }
-/*****zigbee 时间同步 *******/
-u8 zigbee_clock_sync()
-{
-  static u8 len=0,cmd =0;
-  u8 ret,i;
 
-  switch(zigbee_moni_state)
-  {
-  case 0:
-#if defined(Fei_Bi)   
-    data_buff[0]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[14]));
-    data_buff[1]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[13]));
-    data_buff[2]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[12]));
-    data_buff[3]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[11]));
-    data_buff[4]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[10]));
-    data_buff[5]=u8_HEX_2_byte_BCD (((BFCT_protocol_Zigbee.receive_data[9]<<8)+BFCT_protocol_Zigbee.receive_data[8])%2000);
-    write_userdata2eeprom(zigbee_clock_addr,data_buff,6);
-    zigbee_moni_state ++;
-        cmd=0x62;
-        cmd_id=*((u32*)&BFCT_protocol_Zigbee.receive_data[3]);
-        for_cmd_id(cmd_id,ACK,data_buff);
-        cmd_id++;
-        len =0x01;
-#elif defined(Nan_Jing)  
-    for(i=0;i<6;i++)
-    {
-       data_buff[i]= u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[9-i]); //秒
-    }
-    write_userdata2eeprom( zigbee_clock_addr,data_buff,6); //向flash 写时钟
-    cmd = ZIGBEE_CMD_ACK;
-    len = 0X01;
-    zigbee_moni_state ++;
-#endif
-    break;
-    
-  case 1:
-       ret = send_zigbeecmd(len,cmd,data_buff);
-       if(ret)
-       {
-         zigbee_moni_state = 0;    
-         return 1;
-       }
-    break;
-  default:
-    zigbee_moni_state =0;
-    break; 
-  }
-  return 0;
-}
 /*****zigbee 查询用户信息 *******/
 u8 zigbee_inqure_userinfo(void)
 {
@@ -1500,27 +1803,47 @@ u8 zigbee_inqure_userinfo(void)
   static u8 j=0;
   static u8 len,cmd;
   static u8 *buf;
+  u8 casual_work_num;
+  static u8 zigbee_moni_state =0;
 
   switch(zigbee_moni_state)
   {
   case 0:
-       ret = send_zigbeecmd(0X01,ZIGBEE_CMD_ACK,data_buff);
+#if defined(Hai_xin)     
+      data_buff[0] = 0x52;
+      data_buff[5] = 0x20; data_buff[6] = 0x06;
+      data_buff[7] = 0x00;
+      len = 0x09;
+      cmd = 0x16;  
+#elif defined(Nan_Jing)  
+      len = 0x01;
+      cmd = ZIGBEE_CMD_ACK;
+#endif      
+      zigbee_moni_state++;
+  break;
+  case 1:
+       ret = send_zigbeecmd(len,cmd,data_buff);
        if(ret)
        {
+#if defined(Nan_Jing)  
          data_buff[0]=0;  data_buff[1]=0;  data_buff[2]=3;   
          user_attri = BFCT_protocol_Zigbee.receive_data[4]; //
          zigbee_moni_state++;
+#elif defined(Hai_xin) 
+         zigbee_moni_state =10;
+#endif         
+         
        }
     break;
-    
-   case 1:
+#if defined(Nan_Jing)  
+   case 2:
       zigbee_delay=0;
       BFCT_protocol_Lock.receive_enable=0;
       BFCT_protocol_Zigbee.receive_enable=0;
       USART_Cmd(USART1 , DISABLE);
       zigbee_moni_state++;
     break; 
-  case 2:
+  case 3:
       ret = send_lcokcmd(0x04,LOCK_INQUIRY_USER_INFO,data_buff );
       if(ret == 1)
       {
@@ -1541,7 +1864,7 @@ u8 zigbee_inqure_userinfo(void)
       } 
 
   break;
-  case 3:
+  case 4:
       ret = get_lock_message();
       if(ret ==1)
       {
@@ -1605,7 +1928,7 @@ u8 zigbee_inqure_userinfo(void)
 
      }
    break;
-    case 4:
+    case 5:
       if(user_attri == 0)
       {
         if(admin_No >0)
@@ -1690,13 +2013,13 @@ u8 zigbee_inqure_userinfo(void)
       BFCT_protocol_Zigbee.receive_flag =0;
     break;
 
-    case 5:
+    case 6:
         ret = send_zigbeecmd(len,cmd,buf);
         if(ret ==1)
         {
           if(get_mes_num ==3 )
           {
-              zigbee_moni_state++;
+              zigbee_moni_state = 100;;
           }
           else
           {
@@ -1716,7 +2039,7 @@ u8 zigbee_inqure_userinfo(void)
           }
         }
     break;
-  case 6:
+  case 100:
         if(t_1ms)
        {
          zigbee_delay++;
@@ -1728,6 +2051,44 @@ u8 zigbee_inqure_userinfo(void)
          }
        }    
     break;
+#endif
+    
+#if defined(Hai_xin) 
+  case 10:
+      read_userdata4eeprom(casual_work_addr,&casual_work_num, 1);
+      if(casual_work_num > 14 && casual_work_num < 100 )
+      {
+        data_buff[0] = 0x55;
+        data_buff[5] = 0xFD; data_buff[6] = 0x00;
+        data_buff[7] = 0x00; data_buff[8] = 0x03;
+        data_buff[9] = 0x1a; data_buff[10] = 0x01;
+        data_buff[11] = 0x01; data_buff[12] = 0x00;
+        data_buff[13] = 0x0b; data_buff[14] = 0xff;data_buff[15] = 0x01;data_buff[16] = 0x13;
+        read_userdata4eeprom(casual_work_addr,&data_buff[17], 19);
+        len = 0x27;
+        cmd = 0x14;
+      }
+      else
+      {
+        data_buff[0] = 0x55;
+        data_buff[5] = 0xFD; data_buff[6] = 0x00;
+        data_buff[7] = 0x00; data_buff[8] = 0x03;
+        data_buff[9] = 0x01; data_buff[10] = 0xFF;
+        len = 0x0C;
+        cmd = 0x14;
+      }
+      zigbee_moni_state++;
+    break;
+  case 11:
+       ret = send_zigbeecmd(len,cmd,data_buff);
+       if(ret)
+       {
+         zigbee_moni_state =0;
+         return 1;
+       }
+     break;
+#endif
+
         
   default:
     zigbee_moni_state = 0;  
@@ -1735,6 +2096,7 @@ u8 zigbee_inqure_userinfo(void)
   }
   return 0;
 }
+
 
 /*****zigbee 查询锁状态 *******/
 u8 zigbee_inqure_lockstate()
@@ -1807,94 +2169,240 @@ u8 zigbee_inqure_lockstate()
   return 0;
 }
 
+
+
+#if defined ZIGBEE_CMD_ADMIN_IDENTIFICATION_FUNC   
 u8 zigbee_amdin_identification(void)
 {
   u8 ret,i;
-  static u8 zigbee_moni_state=0;
-  static u8 len=0,cmd;
-    switch(zigbee_moni_state)
+  static u8 zigbee_moni_state2=0;
+  static u8 len=0,cmd=0;
+    switch(zigbee_moni_state2)
     {
     case 0:
-     ret = send_zigbeecmd(0X01,ZIGBEE_CMD_ACK,data_buff);
+#if defined(Nan_Jing)
+      len =0x01;
+      cmd = ZIGBEE_CMD_ACK;
+#elif defined(Hai_xin) 
+      
+      data_buff[0] = 0x52;data_buff[1] = 0xff;data_buff[2] = 0xff;data_buff[3] = 0xff;data_buff[4] = 0xff;
+      data_buff[5] = 0x20; data_buff[6] = 0x06;
+      data_buff[7] = 0x00;
+      len = 0x09;
+      cmd = 0x16;  
+#endif      
+      zigbee_moni_state2++;
+      break;
+      
+    case 1:
+      
+     ret = send_zigbeecmd(len,cmd,data_buff);
      if(ret)
      {
-       zigbee_moni_state ++;    
+       zigbee_moni_state2 ++;    
      }
     break;
     
-    case 1:
+    case 2:
         data_buff[0] = 0x80;
-        zigbeedata_2_lockdata(zigbee_password,&data_buff[1],&BFCT_protocol_Zigbee.receive_data[8]);
+   
+        zigbeedata_2_lockdata(zigbee_password,&data_buff[1],&BFCT_protocol_Zigbee.receive_data[16]);
         zigbee_delay = 0;
         for(i=4;i<8;i++)
         data_buff[i] = 0xff;
-        zigbee_moni_state++;
+        zigbee_moni_state2++;
+        
     break;
-    case 2:
+    case 3:
        ret = send_lcokcmd(0x09,41,data_buff );
        if(ret == 1)
        {
           BFCT_protocol_Lock.receive_flag=0;
-          zigbee_moni_state++;
+          zigbee_moni_state2++;
+         
        }
        else if(ret == 2)
        {  
+#if defined(Nan_Jing)      
           cmd = 0x07;
           len = 0x01;
-          zigbee_moni_state =10; 
+#elif defined(Hai_xin) 
+          data_buff[10] = 0x02;
+#endif          
+          zigbee_moni_state2 =10; 
         } 
     
     break;
-    case 3:
+    case 4:
+       
        ret = get_lock_message();
        if(ret ==1)
        {
+         zigbee_moni_state2 =10;
           ret = check_lock_cmd(0xA9);
           if(ret ==1)
           { 
             if(BFCT_protocol_Lock.receive_data[LOCK_ACK_RES_ADDR] == 0)
             {
+#if defined(Nan_Jing)   
               cmd = 0x05;
               len = 0x01;
-              zigbee_moni_state=10;
+#elif defined(Hai_xin) 
+             data_buff[10] = 0x00;
+          
+#endif
+              zigbee_moni_state2=10;
             }
             else
             {
+#if defined(Nan_Jing)   
               cmd = 0x07;
               len = 0x01;
-              zigbee_moni_state=10;
+#elif defined(Hai_xin) 
+             data_buff[10] = 0x01;
+#endif
+              zigbee_moni_state2=10;
             }
           }
           else
           {
+#if defined(Nan_Jing)   
             cmd = 0x07;
             len = 0x01;
-           zigbee_moni_state=10;
+#elif defined(Hai_xin) 
+            data_buff[10] = 0x02;
+#endif
+           zigbee_moni_state2=10;
           }
        }
        else if(ret ==2)
        {
+#if defined(Nan_Jing)   
           cmd = 0x07;
           len = 0x01;
-          zigbee_moni_state=10;
+#elif defined(Hai_xin) 
+          data_buff[10] = 0x02;
+#endif          
+          zigbee_moni_state2=10;
        }
        break;
     case 10:
+      
+#if defined(Hai_xin)     
+          data_buff[0] = 0x55;data_buff[1] = 0xff;data_buff[2] = 0xff;data_buff[3] = 0xff;data_buff[4] = 0xff;
+          data_buff[5] = 0xfd; data_buff[6] = 0x00;
+          data_buff[7] = 0x00;data_buff[8] = 0x04;
+          data_buff[9] = 0x01;
+          len = 0x0c;
+          cmd = 0x14; 
+#endif
+          zigbee_moni_state2++;
+      break;
+       
+    case 11:
        ret = send_zigbeecmd(len,cmd,data_buff);
        if(ret)
        {
-         zigbee_moni_state = 0;    
+         zigbee_moni_state2 = 0;    
          return 1;
        }
     break;
       
   default:
-    zigbee_moni_state =0 ;
+    zigbee_moni_state2 =0 ;
     break; 
   }
   return 0;
 }
+#endif
 
+
+
+#if defined ZIGBEE_CMD_CLOCK_SYNC_FUNC 
+/*****zigbee 时间同步 *******/
+u8 zigbee_clock_sync()
+{
+  static u8 len=0,cmd =0;
+  u8 ret,i;
+#if defined(Hai_xin)  
+  UTCTimeStruct tm;
+#endif  
+  static u8 zigbee_moni_state2=0;
+  switch(zigbee_moni_state2)
+  {
+  case 0:
+#if defined(Fei_Bi)   
+    data_buff[0]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[14]));
+    data_buff[1]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[13]));
+    data_buff[2]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[12]));
+    data_buff[3]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[11]));
+    data_buff[4]=(u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[10]));
+    data_buff[5]=u8_HEX_2_byte_BCD (((BFCT_protocol_Zigbee.receive_data[9]<<8)+BFCT_protocol_Zigbee.receive_data[8])%2000);
+    write_userdata2eeprom(zigbee_clock_addr,data_buff,6);
+    zigbee_moni_state2 ++;
+        cmd=0x62;
+        cmd_id=*((u32*)&BFCT_protocol_Zigbee.receive_data[3]);
+        for_cmd_id(cmd_id,ACK,data_buff);
+        cmd_id++;
+        len =0x01;
+#elif defined(Nan_Jing)  
+    for(i=0;i<6;i++)
+    {
+       data_buff[i]= u8_HEX_2_byte_BCD(BFCT_protocol_Zigbee.receive_data[9-i]); //秒
+    }
+    write_userdata2eeprom( zigbee_clock_addr,data_buff,6); //向flash 写时钟
+    cmd = ZIGBEE_CMD_ACK;
+    len = 0X01;
+    zigbee_moni_state2 ++;
+#elif defined(Hai_xin)     
+      osal_time = *(u32*)(&BFCT_protocol_Zigbee.receive_data[9]);
+      osal_converUtctime(&tm,*(u32 *)&BFCT_protocol_Zigbee.receive_data[9]);
+      data_buff[0]=u8_HEX_2_byte_BCD(tm.seconds);
+      data_buff[1]=u8_HEX_2_byte_BCD(tm.minutes);
+      data_buff[2]=u8_HEX_2_byte_BCD(tm.hour);
+      data_buff[3]=u8_HEX_2_byte_BCD(tm.day);
+      data_buff[4]=u8_HEX_2_byte_BCD(tm.month);
+      data_buff[5]=u8_HEX_2_byte_BCD(tm.year);
+      write_userdata2eeprom(zigbee_clock_addr,data_buff,6);
+#if 0
+      data_buff[0] = 0x52;
+      data_buff[5] = 0x20; data_buff[6] = 0x06;
+      data_buff[7] = 0x00;
+      len = 0x09;
+      cmd = 0x16;  
+#endif  
+      zigbee_moni_state2 = 2;
+#endif
+    break;
+    
+
+#if defined(Hai_xin)  
+  case 2:
+    ret = lock_logout_settting_mode();
+    if(ret ==1)
+    {
+       zigbee_moni_state2=0;    
+       return 1;
+    }
+    break;
+#else 
+  case 1:
+       ret = send_zigbeecmd(len,cmd,data_buff);
+       if(ret)
+       {
+         zigbee_moni_state2 = 0;    
+         return 1;    
+       }
+    break;
+    
+#endif
+  default:
+    zigbee_moni_state2 =0;
+    break; 
+  }
+  return 0;
+}
+#endif
 
 #if defined(Jun_He)
 /*********查询锁状态,主要获得锁协议的类型************/
@@ -1941,3 +2449,5 @@ u8 zigbee_inqure_factory_id(void)
   return 0;
 }
 #endif
+
+

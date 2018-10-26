@@ -37,6 +37,7 @@ u8 year; // 2000+
 } UTCTimeStruct;
 
 
+
 /****1¸ö×Ö½ÚBCDÂë×ªHEX *********/
 
 u8 u8_BCD_2_hex(u8 data)
